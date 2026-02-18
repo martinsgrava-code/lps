@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LPS Inspection Comparison: Robot vs Drone</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/inter.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --brand-dark-blue: #1C67A1;
+            --brand-light-blue: #30A2D6;
+            --brand-orange: #FC6722;
+            --brand-green: #1AC293;
+            --brand-danger: #EF4444; 
+            --bg-body: #F5F7FA;
+            --bg-card: #FFFFFF;
+            --text-main: #1A1A1A;
+            --text-muted: #64748B;
+            --border-light: #E2E8F0;
+        }
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; }
+        
+        /* NAV & LAYOUT */
+        nav { background: var(--bg-card); padding: 10px 20px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo { height: 24px; display: block; }
+        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+        
+        h1 { font-weight: 800; font-size: 1.6rem; margin: 0 0 5px 0; color: var(--brand-dark-blue); letter-spacing: -0.5px; }
+        p.subtitle { color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0; }
+
+        /* GRID */
+        .dashboard-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+
+        /* CARDS */
+        .card { background: var(--bg-card); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border-light); margin-bottom: 15px; }
+        .card h3 { margin-top: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--brand-light-blue); margin-bottom: 15px; font-weight: 700; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; }
+
+        /* INPUTS */
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--brand-dark-blue); margin-bottom: 4px; }
+        .input-row { display: flex; gap: 8px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; background: #fff; font-size: 0.85rem; color: var(--text-main); }
+        input:focus { outline: none; border-color: var(--brand-light-blue); box-shadow: 0 0 0 3px rgba(48, 162, 214, 0.1); }
+        
+        /* HELPER TEXT */
+        .helper-text { font-size: 0.65rem; color: #94a3b8; margin-top: -8px; margin-bottom: 12px; font-style: italic; }
+
+        /* REWORK SECTION STYLE */
+        .rework-box { background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; margin-top: 15px; }
+        .rework-title { color: #B91C1C; font-weight: 700; font-size: 0.75rem; margin-bottom: 8px; display:flex; justify-content:space-between; }
+
+        /* SAVINGS BANNER */
+        .savings-banner { background: linear-gradient(to right, #f0fdf4, #ffffff); border: 1px solid #bbf7d0; border-left: 5px solid var(--brand-green); padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 15px; }
+        .savings-text { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #166534; letter-spacing: 0.5px; }
+        .savings-amount { font-size: 1.2rem; font-weight: 800; color: var(--brand-green); display: block; }
+        .hidden { display: none !important; }
+
+        /* CHART */
+        .chart-container { height: 320px; position: relative; width: 100%; }
+        .chart-toggles { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+        .toggle-pill { padding: 6px 12px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 0.75rem; font-weight: 600; cursor: pointer; background: #F8FAFC; opacity: 0.6; }
+        .toggle-pill.active { background: white; border-color: var(--brand-dark-blue); color: var(--brand-dark-blue); opacity: 1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+        /* TABLE */
+        .table-responsive { width: 100%; overflow-x: auto; margin-top: 5px; }
+        table { width: 100%; min-width: 800px; border-collapse: collapse; }
+        th { text-align: center; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; padding: 8px 4px; border-bottom: 2px solid var(--border-light); vertical-align: bottom; }
+        th:first-child { text-align: left; }
+        td { text-align: center; padding: 8px 4px; border-bottom: 1px solid var(--border-light); font-size: 0.75rem; }
+        td:first-child { text-align: left; }
+        .total-cost { font-weight: 800; color: var(--brand-dark-blue); font-size: 0.8rem; }
+        
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 35, 65, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 12px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
+        
+        /* CLOSE BUTTON */
+        .modal-close { 
+            position: absolute; top: 20px; right: 20px; 
+            width: 32px; height: 32px; 
+            background: #F1F5F9; color: #64748B; 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 20px; font-weight: bold; cursor: pointer; 
+            transition: all 0.2s; 
+        }
+        .modal-close:hover { background: #E2E8F0; color: #1C67A1; }
+        
+        .modal-header { font-size: 1.2rem; font-weight: 800; color: var(--brand-dark-blue); margin-bottom: 20px; border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; }
+        .modal-section-title { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 5px; }
+
+        .btn-done {
+            background: var(--brand-dark-blue); color: white; border: none; padding: 12px; width: 100%; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 25px; font-size: 1rem; transition: background 0.2s;
+        }
+        .btn-done:hover { background: #164e7a; }
+
+        /* CHECKBOX ROW */
+        .cap-checkbox-row { margin-top: 4px; font-size: 0.7rem; color: #64748B; display: flex; align-items: center; gap: 6px; }
+        .cap-checkbox-row input { width: auto; margin: 0; cursor: pointer; }
+
+        @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<nav>
+    <img src="https://aerones.com/wp-content/uploads/2022/02/aerones-logo-rgb.svg" alt="Aerones" class="logo">
+</nav>
+
+<div class="container">
+    <header>
+        <h1>LPS Inspection Comparison</h1>
+        <p class="subtitle">Robot (Contact Measurement) vs. Drone (Visual Only + Manual Rework).</p>
+    </header>
+
+    <div class="dashboard-grid">
+        
+        <div class="card sidebar-card">
+            <h3>Campaign Parameters</h3>
+            
+            <div class="input-group">
+                <label>Region Defaults</label>
+                <select id="regionSelector" onchange="loadDefaults()">
+                    <option value="EU">Europe (EUR €)</option>
+                    <option value="USA" selected>USA (USD $)</option>
+                </select>
+            </div>
+
+            <div class="input-row">
+                <div class="input-group" style="flex:1">
+                    <label>Turbines</label>
+                    <input type="number" id="numTurbines" value="20" onchange="calculate()">
+                </div>
+                <div class="input-group" style="flex:1">
+                    <label>MW Class</label>
+                    <input type="number" id="turbineModel" value="3.0" step="0.1" onchange="calculate()">
+                </div>
+            </div>
+
+            <div class="input-row" style="margin-bottom:2px;">
+                <div class="input-group" style="flex:1">
+                    <label>Energy Price / MWh</label>
+                    <input type="number" id="marketValue" value="78" onchange="calculate()">
+                </div>
+                <div class="input-group" style="flex:1">
+                    <label>Capacity Factor %</label>
+                    <input type="number" id="capacityFactor" value="35" onchange="calculate()">
+                    <div class="cap-checkbox-row">
+                        <input type="checkbox" id="capToggle" onchange="toggleAvailability()">
+                        <span>Availability Guarantee</span>
+                    </div>
+                </div>
+            </div>
+            <div class="helper-text">* Total revenue per MWh (incl. PTC/tax credits)</div>
+
+            <div class="input-row">
+                <div class="input-group" style="flex:1">
+                    <label>Receptors / Blade</label>
+                    <input type="number" id="receptorCount" value="3" onchange="calculate()">
+                </div>
+                <div class="input-group" style="flex:1">
+                    <label>Shift Length (Hr)</label>
+                    <input type="number" id="shiftLength" value="10" onchange="calculate()">
+                </div>
+            </div>
+
+            <div class="rework-box">
+                <div class="rework-title">
+                    <span>⚠️ Drone Rework Factor</span>
+                    <span id="reworkVal">20%</span>
+                </div>
+                <p style="font-size:0.65rem; color:#7F1D1D; margin-top:0; line-height:1.3; margin-bottom:10px;">
+                    Percentage of turbines needing manual intervention (Rope Access) after drone flight.
+                </p>
+                <input type="range" id="reworkPct" min="0" max="100" step="1" value="20" oninput="document.getElementById('reworkVal').innerText=this.value+'%'; calculate()">
+                
+                <div style="font-size:0.65rem; color:#64748B; margin-top:8px; text-align:center;">
+                    <i>Edit manual rates by clicking the graph bars.</i>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-area">
+            
+            <div id="savingsBanner" class="savings-banner hidden">
+                <div>
+                    <div class="savings-text">Aerones Savings</div>
+                    <span class="savings-amount" id="savingsAmount">€0</span>
+                    <div id="savingsPct" style="font-weight:700; color:#15803d; font-size:0.9rem;">0% Cheaper</div>
+                </div>
+                <div>
+                    <div class="savings-text">Reason</div>
+                    <div style="font-size:0.8rem; color:#14532d;">Eliminating manual rework costs.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Total Cost of Ownership <span style="font-size:0.7rem; color:#999; font-weight:400; margin-left:5px;">(Click bars to edit profiles)</span></h3>
+                <div class="chart-container">
+                    <canvas id="costChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0;">Method Breakdown</h3>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="breakdownTable">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Speed<br>(WTG/Day)</th>
+                                <th>Base<br>Service</th>
+                                <th>Idle<br>Cost</th>
+                                <th>Downtime<br>Cost</th>
+                                <th style="border-left:2px solid #E2E8F0;">Rework<br>Service</th>
+                                <th>Rework<br>Idle</th>
+                                <th>Rework<br>Down</th>
+                                <th style="border-left:2px solid #E2E8F0;">Total<br>Campaign</th>
+                                <th>Cost/WTG<br>(Excl. Down)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="breakdownTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div style="text-align:right; margin-top:10px;">
+                 <button class="toggle-pill active" onclick="openSpeedModal()">⏱ Compare Duration</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editProfileModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeEditModal()">&times;</span>
+        <div id="editModalHeader" class="modal-header">Edit Profile</div>
+        
+        <input type="hidden" id="editKey"> 
+        
+        <div class="input-group">
+            <label>Service Price (Per WTG)</label>
+            <input type="number" id="editPrice" onchange="updateProfileVal()">
+        </div>
+        
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Base Speed (at 3 rec/blade)</label>
+                <input type="number" id="editSpeed" step="0.1" onchange="updateProfileVal()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Techs (Count)</label>
+                <input type="number" id="editTechs" onchange="updateProfileVal()">
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Mob Fee</label>
+                <input type="number" id="editMob" onchange="updateProfileVal()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Accom. (Per Tech/Day)</label>
+                <input type="number" id="editAcc" onchange="updateProfileVal()">
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label>Idle Rate ($/hr per team)</label>
+            <input type="number" id="editIdleRate" onchange="updateProfileVal()">
+        </div>
+
+        <div class="input-group">
+            <label>Weather Risk % (Idle Time)</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input type="range" id="editRiskRange" min="0" max="100" step="5" style="flex:1" oninput="document.getElementById('editRiskVal').innerText=this.value+'%'; document.getElementById('editRisk').value=this.value/100; updateProfileVal()">
+                <span id="editRiskVal" style="font-weight:700; font-size:0.8rem; width:40px;">20%</span>
+                <input type="hidden" id="editRisk">
+            </div>
+        </div>
+
+        <div class="modal-section-title">Rope Access (Rework/Baseline) Assumptions</div>
+        
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Hourly Rate (Per Tech)</label>
+                <input type="number" id="editRatRate" onchange="updateRatVal()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Base Speed (WTG/Day)</label>
+                <input type="number" id="editRatSpeed" step="0.1" onchange="updateRatVal()">
+            </div>
+        </div>
+        
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Manual Techs</label>
+                <input type="number" id="editRatTechs" onchange="updateRatVal()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Manual Accom.</label>
+                <input type="number" id="editRatAcc" onchange="updateRatVal()">
+            </div>
+        </div>
+        
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Manual Mob Fee</label>
+                <input type="number" id="editRatMob" onchange="updateRatVal()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Manual Idle Rate ($/hr)</label>
+                <input type="number" id="editRatIdle" onchange="updateRatVal()">
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label>Manual Weather Risk %</label>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <input type="range" id="editRatRiskRange" min="0" max="100" step="5" style="flex:1" oninput="document.getElementById('editRatRiskVal').innerText=this.value+'%'; document.getElementById('editRatRisk').value=this.value/100; updateRatVal()">
+                <span id="editRatRiskVal" style="font-weight:700; font-size:0.8rem; width:40px;">30%</span>
+                <input type="hidden" id="editRatRisk">
+            </div>
+        </div>
+
+        <button class="btn-done" onclick="closeEditModal()">Done</button>
+    </div>
+</div>
+
+<div id="speedModal" class="modal-overlay">
+    <div class="modal-content" style="max-width:600px;">
+        <span class="modal-close" onclick="document.getElementById('speedModal').classList.remove('active')">&times;</span>
+        <h3 style="color:var(--brand-dark-blue);">Campaign Duration</h3>
+        <div style="height:300px;"><canvas id="speedChart"></canvas></div>
+    </div>
+</div>
+
+<script>
+    // GLOBAL DATA OBJECT (Updated by UI)
+    let ACTIVE_DATA = {}; 
+
+    // DEFAULTS
+    const CONFIG = {
+        EU: {
+            symbol: '€',
+            aerones: { price: 1500, speed: 3, mob: 7000, acc: 110, techs: 3, risk: 0.15, idleRate: 150 },
+            drone:   { price: 800,  speed: 5, mob: 3000, acc: 110, techs: 2, risk: 0.30, idleRate: 150 },
+            manual:  { rate: 85,  speed: 1, mob: 3000, acc: 110, techs: 3, risk: 0.30, idleRate: 150 }
+        },
+        USA: {
+            symbol: '$',
+            aerones: { price: 2150, speed: 3, mob: 7000, acc: 160, techs: 3, risk: 0.15, idleRate: 160 },
+            drone:   { price: 1000, speed: 8, mob: 4000, acc: 160, techs: 2, risk: 0.25, idleRate: 160 },
+            manual:  { rate: 140,  speed: 0.7, mob: 4000, acc: 160, techs: 3, risk: 0.30, idleRate: 160 }
+        }
+    };
+
+    let CURRENCY = '$';
+    let myChart = null;
+    let speedChartInstance = null;
+
+    function init() {
+        loadDefaults();
+        // Escape Key Listener
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeEditModal();
+                document.getElementById('speedModal').classList.remove('active');
+            }
+        });
+    }
+
+    function toggleAvailability() {
+        const chk = document.getElementById('capToggle');
+        const inp = document.getElementById('capacityFactor');
+        if(chk.checked) { inp.value = 100; inp.disabled = true; }
+        else { inp.value = 35; inp.disabled = false; }
+        calculate();
+    }
+
+    function loadDefaults() {
+        const region = document.getElementById('regionSelector').value;
+        const defaults = CONFIG[region];
+        CURRENCY = defaults.symbol;
+        
+        ACTIVE_DATA = JSON.parse(JSON.stringify(defaults));
+        
+        calculate();
+    }
+
+    // --- RECEPTOR SPEED LOGIC ---
+    function getAdjustedSpeed(baseSpeed, type) {
+        // Base Speed assumes 3 receptors per blade
+        const recCount = parseFloat(document.getElementById('receptorCount').value);
+        const shiftLength = parseFloat(document.getElementById('shiftLength').value);
+        
+        if (recCount <= 3) return baseSpeed; // No penalty if 3 or fewer
+        
+        // Calculate Base Time (Mins per Turbine)
+        const totalMins = shiftLength * 60;
+        const baseMinsPerWTG = totalMins / baseSpeed;
+        
+        // Calculate Penalty
+        const extraRecs = (recCount - 3) * 3; // 3 Blades
+        const penaltyPerRec = type === 'drone' ? 3 : 5; // 3 mins for drone, 5 for contact
+        const addedTime = extraRecs * penaltyPerRec;
+        
+        const newMinsPerWTG = baseMinsPerWTG + addedTime;
+        
+        // Convert back to Speed
+        return totalMins / newMinsPerWTG;
+    }
+
+    function calculate() {
+        const data = ACTIVE_DATA; 
+        const count = parseFloat(document.getElementById('numTurbines').value);
+        const shiftLength = parseFloat(document.getElementById('shiftLength').value);
+        
+        // --- DOWNTIME CALCULATION ---
+        const mw = parseFloat(document.getElementById('turbineModel').value);
+        const price = parseFloat(document.getElementById('marketValue').value);
+        const cap = parseFloat(document.getElementById('capacityFactor').value) / 100;
+        const downtimeRate = mw * price * cap; 
+
+        // Rework Inputs
+        const reworkPct = parseFloat(document.getElementById('reworkPct').value) / 100;
+
+        // Helper: Accom Weekend Logic
+        const getAccomDays = (activeDays, weatherDays) => {
+            const totalWorkDays = activeDays + weatherDays;
+            const weekendDays = Math.floor(totalWorkDays / 7);
+            return totalWorkDays + weekendDays;
+        };
+
+        // 1. AERONES CALC (Robot)
+        // APPLY RECEPTOR LOGIC
+        const a_adjSpeed = getAdjustedSpeed(data.aerones.speed, 'aerones');
+        
+        const a_activeDays = count / a_adjSpeed;
+        const a_weatherDays = a_activeDays * data.aerones.risk;
+        const a_accomDays = getAccomDays(a_activeDays, a_weatherDays);
+        
+        const a_baseCost = (data.aerones.price * count) + data.aerones.mob + (a_accomDays * data.aerones.techs * data.aerones.acc);
+        const a_idleCost = a_weatherDays * shiftLength * data.aerones.idleRate;
+        const a_downCost = a_activeDays * shiftLength * downtimeRate;
+
+        const a_total = a_baseCost + a_idleCost + a_downCost;
+        const a_costExclDown = (a_baseCost + a_idleCost) / count;
+
+        // 2. DRONE CALC (Initial Phase)
+        // APPLY RECEPTOR LOGIC (Drone Penalty)
+        const d_adjSpeed = getAdjustedSpeed(data.drone.speed, 'drone');
+        
+        const d_activeDays = count / d_adjSpeed;
+        const d_weatherDays = d_activeDays * data.drone.risk;
+        const d_accomDays = getAccomDays(d_activeDays, d_weatherDays);
+
+        const d_baseCost = (data.drone.price * count) + data.drone.mob + (d_accomDays * data.drone.techs * data.drone.acc);
+        const d_idleCost = d_weatherDays * shiftLength * data.drone.idleRate;
+        const d_downCost = d_activeDays * shiftLength * downtimeRate;
+
+        // 3. DRONE REWORK
+        const r_count = count * reworkPct;
+        let r_serviceTotal = 0;
+        let r_idleCost = 0;
+        let r_downCost = 0;
+        let m_adjSpeed = data.manual.speed;
+        
+        if (r_count > 0) {
+            // APPLY RECEPTOR LOGIC (Manual Penalty)
+            m_adjSpeed = getAdjustedSpeed(data.manual.speed, 'manual');
+            
+            const r_activeDays = r_count / m_adjSpeed;
+            const r_weatherDays = r_activeDays * data.manual.risk; 
+            const r_accomDays = getAccomDays(r_activeDays, r_weatherDays);
+            
+            const r_labor = r_activeDays * shiftLength * data.manual.techs * data.manual.rate;
+            const r_acc = r_accomDays * data.manual.techs * data.manual.acc;
+            r_serviceTotal = r_labor + data.manual.mob + r_acc;
+            
+            r_idleCost = r_weatherDays * shiftLength * data.manual.idleRate;
+            r_downCost = r_activeDays * shiftLength * downtimeRate;
+        }
+        
+        const d_grandTotal = d_baseCost + d_idleCost + d_downCost + r_serviceTotal + r_idleCost + r_downCost;
+        const d_costExclDown = (d_baseCost + d_idleCost + r_serviceTotal + r_idleCost) / count;
+
+        // RENDER TABLE
+        const money = (val) => CURRENCY + Math.round(val).toLocaleString();
+        
+        let html = `
+            <tr class="winner">
+                <td><strong>Aerones Robot</strong></td>
+                <td>${a_adjSpeed.toFixed(1)}</td>
+                <td>${money(a_baseCost)}</td>
+                <td>${money(a_idleCost)}</td>
+                <td>${money(a_downCost)}</td>
+                <td style="border-left:2px solid #E2E8F0;">${money(0)}</td>
+                <td>${money(0)}</td>
+                <td>${money(0)}</td>
+                <td class="total-cost" style="border-left:2px solid #E2E8F0;">${money(a_total)}</td>
+                <td style="font-weight:700; color:#1C67A1;">${money(a_costExclDown)}</td>
+            </tr>
+            <tr>
+                <td><strong>Drone + Rework</strong></td>
+                <td>${d_adjSpeed.toFixed(1)} (Drone)<br>${m_adjSpeed.toFixed(1)} (RAT)</td>
+                <td>${money(d_baseCost)}</td>
+                <td>${money(d_idleCost)}</td>
+                <td>${money(d_downCost)}</td>
+                <td style="border-left:2px solid #E2E8F0; color:var(--brand-danger);">${money(r_serviceTotal)}</td>
+                <td style="color:var(--brand-danger);">${money(r_idleCost)}</td>
+                <td style="color:var(--brand-danger);">${money(r_downCost)}</td>
+                <td class="total-cost" style="border-left:2px solid #E2E8F0;">${money(d_grandTotal)}</td>
+                <td style="font-weight:700; color:#1C67A1;">${money(d_costExclDown)}</td>
+            </tr>
+        `;
+        document.getElementById('breakdownTableBody').innerHTML = html;
+
+        // SAVINGS BANNER
+        const banner = document.getElementById('savingsBanner');
+        if(a_total < d_grandTotal) {
+            banner.classList.remove('hidden');
+            const diff = d_grandTotal - a_total;
+            const pct = (diff / d_grandTotal) * 100;
+            document.getElementById('savingsAmount').innerText = money(diff);
+            document.getElementById('savingsPct').innerText = pct.toFixed(1) + "% Cheaper";
+        } else {
+            banner.classList.add('hidden');
+        }
+
+        updateChart(
+            a_baseCost, a_idleCost, a_downCost, 0, 0, 0,
+            d_baseCost, d_idleCost, d_downCost, r_serviceTotal, r_idleCost, r_downCost
+        );
+    }
+
+    function updateChart(a_base, a_idle, a_down, a_r_serv, a_r_idle, a_r_down,
+                        d_base, d_idle, d_down, d_r_serv, d_r_idle, d_r_down) {
+        
+        const ctx = document.getElementById('costChart').getContext('2d');
+        if(myChart) myChart.destroy();
+        
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Aerones Robot', 'Drone + Manual Fix'],
+                datasets: [
+                    { label: 'Base Service', data: [a_base, d_base], backgroundColor: '#1C67A1', stack: '0' },
+                    { label: 'Idle Cost', data: [a_idle, d_idle], backgroundColor: '#93C5FD', stack: '0' },
+                    { label: 'Downtime', data: [a_down, d_down], backgroundColor: '#94A3B8', stack: '0' },
+                    
+                    { label: 'Rework Service', data: [0, d_r_serv], backgroundColor: '#EF4444', stack: '0' },
+                    { label: 'Rework Idle', data: [0, d_r_idle], backgroundColor: '#FECACA', stack: '0' },
+                    { label: 'Rework Downtime', data: [0, d_r_down], backgroundColor: '#7F1D1D', stack: '0' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { x: { stacked: true }, y: { stacked: true } },
+                onClick: (evt, elements) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const key = index === 0 ? 'aerones' : 'drone';
+                        openEditModal(key);
+                    }
+                }
+            }
+        });
+    }
+
+    // --- EDIT MODAL LOGIC ---
+    function openEditModal(key) {
+        const modal = document.getElementById('editProfileModal');
+        const data = ACTIVE_DATA[key];
+        const manualData = ACTIVE_DATA.manual;
+        
+        const name = key === 'aerones' ? 'Aerones Robot' : 'Drone (Inspection Phase)';
+        document.getElementById('editModalHeader').innerText = "Edit Profile: " + name;
+        document.getElementById('editKey').value = key;
+        
+        // Set Primary Profile Values
+        document.getElementById('editPrice').value = data.price;
+        document.getElementById('editSpeed').value = data.speed;
+        document.getElementById('editMob').value = data.mob;
+        document.getElementById('editTechs').value = data.techs;
+        document.getElementById('editAcc').value = data.acc;
+        document.getElementById('editIdleRate').value = data.idleRate;
+        
+        // Risk Range
+        const riskPct = Math.round(data.risk * 100);
+        document.getElementById('editRiskRange').value = riskPct;
+        document.getElementById('editRiskVal').innerText = riskPct + "%";
+        document.getElementById('editRisk').value = data.risk;
+
+        // Set RAT / Manual Values
+        document.getElementById('editRatRate').value = manualData.rate;
+        document.getElementById('editRatSpeed').value = manualData.speed;
+        document.getElementById('editRatTechs').value = manualData.techs;
+        document.getElementById('editRatAcc').value = manualData.acc;
+        document.getElementById('editRatMob').value = manualData.mob;
+        document.getElementById('editRatIdle').value = manualData.idleRate;
+        
+        // Set RAT Risk Slider
+        const ratRiskPct = Math.round(manualData.risk * 100);
+        document.getElementById('editRatRiskRange').value = ratRiskPct;
+        document.getElementById('editRatRiskVal').innerText = ratRiskPct + "%";
+        document.getElementById('editRatRisk').value = manualData.risk;
+
+        modal.classList.add('active');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editProfileModal').classList.remove('active');
+    }
+
+    function updateProfileVal() {
+        const key = document.getElementById('editKey').value;
+        const data = ACTIVE_DATA[key];
+        
+        data.price = parseFloat(document.getElementById('editPrice').value);
+        data.speed = parseFloat(document.getElementById('editSpeed').value);
+        data.mob = parseFloat(document.getElementById('editMob').value);
+        data.techs = parseFloat(document.getElementById('editTechs').value);
+        data.acc = parseFloat(document.getElementById('editAcc').value);
+        data.risk = parseFloat(document.getElementById('editRisk').value);
+        data.idleRate = parseFloat(document.getElementById('editIdleRate').value);
+        
+        calculate();
+    }
+
+    function updateRatVal() {
+        const data = ACTIVE_DATA.manual;
+        data.rate = parseFloat(document.getElementById('editRatRate').value);
+        data.speed = parseFloat(document.getElementById('editRatSpeed').value);
+        data.techs = parseFloat(document.getElementById('editRatTechs').value);
+        data.acc = parseFloat(document.getElementById('editRatAcc').value);
+        data.mob = parseFloat(document.getElementById('editRatMob').value);
+        data.risk = parseFloat(document.getElementById('editRatRisk').value);
+        data.idleRate = parseFloat(document.getElementById('editRatIdle').value);
+        
+        calculate();
+    }
+
+    // SPEED MODAL
+    function openSpeedModal() {
+        document.getElementById('speedModal').classList.add('active');
+        const data = ACTIVE_DATA;
+        const count = parseFloat(document.getElementById('numTurbines').value);
+        const reworkPct = parseFloat(document.getElementById('reworkPct').value) / 100;
+        
+        const a_adjSpeed = getAdjustedSpeed(data.aerones.speed, 'aerones');
+        const d_adjSpeed = getAdjustedSpeed(data.drone.speed, 'drone');
+        const m_adjSpeed = getAdjustedSpeed(data.manual.speed, 'manual');
+
+        // Aerones
+        const a_days = (count / a_adjSpeed) * (1 + data.aerones.risk) * 1.16;
+        
+        // Drone
+        const d_insp_days = (count / d_adjSpeed) * (1 + data.drone.risk) * 1.16;
+        
+        // Rework (Sequential)
+        const r_count = count * reworkPct;
+        const r_days = (r_count / m_adjSpeed) * (1 + data.manual.risk) * 1.16;
+
+        const ctx = document.getElementById('speedChart').getContext('2d');
+        if(speedChartInstance) speedChartInstance.destroy();
+
+        speedChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Aerones', 'Drone Process'],
+                datasets: [
+                    { label: 'Inspection Phase', data: [a_days.toFixed(1), d_insp_days.toFixed(1)], backgroundColor: '#1C67A1' },
+                    { label: 'Rework Phase', data: [0, r_days.toFixed(1)], backgroundColor: '#EF4444' }
+                ]
+            },
+            options: { indexAxis: 'y', scales: { x: { stacked: true }, y: { stacked: true } } }
+        });
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
