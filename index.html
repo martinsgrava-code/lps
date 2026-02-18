@@ -432,9 +432,11 @@
         // Rework Inputs
         const reworkPct = parseFloat(document.getElementById('reworkPct').value) / 100;
 
-        // Helper: Accom Weekend Logic
+        // Helper: Accom Weekend Logic (Only counts if > 7 days)
         const getAccomDays = (activeDays, weatherDays) => {
             const totalWorkDays = activeDays + weatherDays;
+            if (totalWorkDays <= 7) return totalWorkDays;
+            
             const weekendDays = Math.floor(totalWorkDays / 7);
             return totalWorkDays + weekendDays;
         };
@@ -481,6 +483,7 @@
             const r_weatherDays = r_activeDays * data.manual.risk; 
             const r_accomDays = getAccomDays(r_activeDays, r_weatherDays);
             
+            // Labor = Active Days * Shift * Techs * Hourly Rate
             const r_labor = r_activeDays * shiftLength * data.manual.techs * data.manual.rate;
             const r_acc = r_accomDays * data.manual.techs * data.manual.acc;
             r_serviceTotal = r_labor + data.manual.mob + r_acc;
@@ -541,7 +544,7 @@
         );
     }
 
-   function updateChart(a_base, a_idle, a_down, a_r_serv, a_r_idle, a_r_down,
+    function updateChart(a_base, a_idle, a_down, a_r_serv, a_r_idle, a_r_down,
                         d_base, d_idle, d_down, d_r_serv, d_r_idle, d_r_down) {
         
         const ctx = document.getElementById('costChart').getContext('2d');
@@ -550,19 +553,21 @@
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                // ... (leave data section as is) ...
+                labels: ['Aerones Robot', 'Drone + Manual Fix'],
+                datasets: [
+                    { label: 'Base Service', data: [a_base, d_base], backgroundColor: '#1C67A1', stack: '0' },
+                    { label: 'Idle Cost', data: [a_idle, d_idle], backgroundColor: '#93C5FD', stack: '0' },
+                    { label: 'Downtime', data: [a_down, d_down], backgroundColor: '#94A3B8', stack: '0' },
+                    
+                    { label: 'Rework Service', data: [0, d_r_serv], backgroundColor: '#EF4444', stack: '0' },
+                    { label: 'Rework Idle', data: [0, d_r_idle], backgroundColor: '#FECACA', stack: '0' },
+                    { label: 'Rework Downtime', data: [0, d_r_down], backgroundColor: '#7F1D1D', stack: '0' }
+                ]
             },
             options: {
-                // ADD THIS SECTION HERE:
-                datasets: {
-                    bar: {
-                        maxBarThickness: 60  // <--- Caps width at 60px
-                    }
-                },
-                // ... (keep the rest of your options below) ...
-                responsive: true, 
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 scales: { x: { stacked: true }, y: { stacked: true } },
+                datasets: { bar: { maxBarThickness: 200 } },
                 onClick: (evt, elements) => {
                     if (elements.length > 0) {
                         const index = elements[0].index;
@@ -573,6 +578,7 @@
             }
         });
     }
+
     // --- EDIT MODAL LOGIC ---
     function openEditModal(key) {
         const modal = document.getElementById('editProfileModal');
@@ -688,4 +694,3 @@
 
 </body>
 </html>
-
