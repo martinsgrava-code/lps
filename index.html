@@ -206,6 +206,16 @@
                 <input type="number" id="editTechs" onchange="updateProfileVal()">
             </div>
         </div>
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Mobilization</label>
+                <input type="number" id="editMob" onchange="updateProfileVal()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Accom. (Per Tech/Day)</label>
+                <input type="number" id="editAcc" onchange="updateProfileVal()">
+            </div>
+        </div>
         <div class="input-group"><label>Idle Rate ($/hr per tech)</label><input type="number" id="editIdleRate" onchange="updateProfileVal()"></div>
         <div class="input-group">
             <label>Expected idle time %</label>
@@ -218,6 +228,16 @@
         <div class="input-row">
             <div class="input-group" style="flex:1"><label>Base Speed (WTG’s per day)</label><input type="number" id="editRatSpeed" step="0.1" onchange="updateRatVal()"></div>
             <div class="input-group" style="flex:1"><label>Techs</label><input type="number" id="editRatTechs" onchange="updateRatVal()"></div>
+        </div>
+        <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Mobilization</label>
+                <input type="number" id="editRatMob" onchange="updateRatVal()">
+            </div>
+            <div class="input-group" style="flex:1">
+                <label>Accom. (Per Tech/Day)</label>
+                <input type="number" id="editRatAcc" onchange="updateRatVal()">
+            </div>
         </div>
         <div class="input-group"><label>Idle Rate ($/hr per tech)</label><input type="number" id="editRatIdle" onchange="updateRatVal()"></div>
         <div class="input-group">
@@ -277,6 +297,20 @@
         return totalMins / (baseMinsPerWTG + addedTime);
     }
 
+    // Accommodation Helper with Sunday Rule
+    function getAccomTotal(activeDays, weatherDays, techs, dayRate) {
+        const totalDuration = activeDays + weatherDays;
+        if (totalDuration <= 0) return 0;
+        
+        let billableDays = totalDuration;
+        if (totalDuration >= 7) {
+            const extraSundays = Math.floor(totalDuration / 7);
+            billableDays += extraSundays;
+        }
+        
+        return billableDays * techs * dayRate;
+    }
+
     function calculate() {
         const data = ACTIVE_DATA;
         const count = parseFloat(document.getElementById('numTurbines').value);
@@ -287,31 +321,35 @@
         const downRate = mw * energyPrice * cap;
         const shiftLength = parseFloat(document.getElementById('shiftLength').value);
 
-        // Aerones Calculations
+        // Aerones
         const a_speed = getAdjustedSpeed(data.aerones.speed, 'aerones');
         const a_actDays = count / a_speed;
         const a_wDays = a_actDays * data.aerones.risk;
-        const a_base = (data.aerones.price * count) + data.aerones.mob + ((a_actDays + a_wDays) * data.aerones.techs * data.aerones.acc);
+        const a_accom = getAccomTotal(a_actDays, a_wDays, data.aerones.techs, data.aerones.acc);
+        const a_base = (data.aerones.price * count) + data.aerones.mob + a_accom;
         const a_idle = a_wDays * shiftLength * data.aerones.techs * data.aerones.idleRate;
         const a_down = a_actDays * shiftLength * downRate;
         const a_total = a_base + a_idle + a_down;
 
-        // Drone Calculations
+        // Drone
         const d_speed = getAdjustedSpeed(data.drone.speed, 'drone');
         const d_actDays = count / d_speed;
         const d_wDays = d_actDays * data.drone.risk;
-        const d_base = (data.drone.price * count) + data.drone.mob + ((d_actDays + d_wDays) * data.drone.techs * data.drone.acc);
+        const d_accom = getAccomTotal(d_actDays, d_wDays, data.drone.techs, data.drone.acc);
+        const d_base = (data.drone.price * count) + data.drone.mob + d_accom;
         const d_idle = d_wDays * shiftLength * data.drone.techs * data.drone.idleRate;
         const d_down = d_actDays * shiftLength * downRate;
 
-        // Rework Calculations
+        // Rework
         const r_count = count * rPct;
         let r_serv = 0, r_idl = 0, r_dwn = 0;
         if (r_count > 0) {
             const m_speed = getAdjustedSpeed(data.manual.speed, 'manual');
             const r_actDays = r_count / m_speed;
             const r_wDays = r_actDays * data.manual.risk;
-            r_serv = (r_actDays * shiftLength * data.manual.techs * data.manual.rate) + data.manual.mob + ((r_actDays + r_wDays) * data.manual.techs * data.manual.acc);
+            const r_labor = r_actDays * shiftLength * data.manual.techs * data.manual.rate;
+            const r_accom = getAccomTotal(r_actDays, r_wDays, data.manual.techs, data.manual.acc);
+            r_serv = r_labor + data.manual.mob + r_accom;
             r_idl = r_wDays * shiftLength * data.manual.techs * data.manual.idleRate;
             r_dwn = r_actDays * shiftLength * downRate;
         }
@@ -374,7 +412,7 @@
             options: { 
                 responsive: true, maintainAspectRatio: false, 
                 scales: { x: { stacked: true }, y: { stacked: true } },
-                datasets: { bar: { maxBarThickness: 150 } }, // 50% thicker than previous 100
+                datasets: { bar: { maxBarThickness: 150 } },
                 onClick: (e, el) => { if(el.length > 0) openEditModal(el[0].index === 0 ? 'aerones' : 'drone'); }
             }
         });
@@ -388,12 +426,17 @@
         document.getElementById('editPrice').value = d.price;
         document.getElementById('editSpeed').value = d.speed;
         document.getElementById('editTechs').value = d.techs;
+        document.getElementById('editMob').value = d.mob;
+        document.getElementById('editAcc').value = d.acc;
         document.getElementById('editIdleRate').value = d.idleRate;
         document.getElementById('editRiskRange').value = d.risk * 100;
         document.getElementById('editRiskVal').innerText = (d.risk * 100) + "%";
         document.getElementById('editRisk').value = d.risk;
+        
         document.getElementById('editRatSpeed').value = m.speed;
         document.getElementById('editRatTechs').value = m.techs;
+        document.getElementById('editRatMob').value = m.mob;
+        document.getElementById('editRatAcc').value = m.acc;
         document.getElementById('editRatIdle').value = m.idleRate;
         document.getElementById('editRatRiskRange').value = m.risk * 100;
         document.getElementById('editRatRiskVal').innerText = (m.risk * 100) + "%";
@@ -408,6 +451,8 @@
         d.price = parseFloat(document.getElementById('editPrice').value);
         d.speed = parseFloat(document.getElementById('editSpeed').value);
         d.techs = parseFloat(document.getElementById('editTechs').value);
+        d.mob = parseFloat(document.getElementById('editMob').value);
+        d.acc = parseFloat(document.getElementById('editAcc').value);
         d.idleRate = parseFloat(document.getElementById('editIdleRate').value);
         d.risk = parseFloat(document.getElementById('editRisk').value);
         calculate();
@@ -417,6 +462,8 @@
         const m = ACTIVE_DATA.manual;
         m.speed = parseFloat(document.getElementById('editRatSpeed').value);
         m.techs = parseFloat(document.getElementById('editRatTechs').value);
+        m.mob = parseFloat(document.getElementById('editRatMob').value);
+        m.acc = parseFloat(document.getElementById('editRatAcc').value);
         m.idleRate = parseFloat(document.getElementById('editRatIdle').value);
         m.risk = parseFloat(document.getElementById('editRatRisk').value);
         calculate();
