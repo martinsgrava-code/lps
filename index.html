@@ -77,7 +77,7 @@
 <div class="container">
     <header>
         <h1>LPS Inspection Comparison</h1>
-        <p class="subtitle">Robot (Contact Measurement) vs. Drone (+ False Positive RAT Rework).</p>
+        <p class="subtitle">Robot (Contact Measurement) vs. Drone (+ RAT Rework).</p>
     </header>
 
     <div class="dashboard-grid">
@@ -146,7 +146,7 @@
                 </div>
                 <div>
                     <div class="savings-text">Reason</div>
-                    <div style="font-size:0.8rem; color:#14532d;">Eliminating false positive manual rework.</div>
+                    <div style="font-size:0.8rem; color:#14532d;">Eliminating false positive RAT rework.</div>
                 </div>
             </div>
 
@@ -167,7 +167,7 @@
                                 <th rowspan="2">Base Service</th>
                                 <th rowspan="2">Idle</th>
                                 <th rowspan="2">Downtime</th>
-                                <th colspan="3" class="rework-header">Rework Phase</th>
+                                <th colspan="3" class="rework-header">RAT Rework Phase</th>
                                 <th rowspan="2" style="border-left:2px solid #E2E8F0;">Total<br>Campaign</th>
                                 <th rowspan="2">Total / WTG<br>(Excl. Down)</th>
                                 <th rowspan="2">Total / WTG<br>(Incl. Down)</th>
@@ -224,22 +224,31 @@
             <input type="hidden" id="editRisk">
         </div>
 
-        <div class="modal-section-title" style="margin-top:20px; font-weight:800; color:var(--brand-danger);">Manual Rework</div>
+        <div class="modal-section-title" style="margin-top:20px; font-weight:800; color:var(--brand-danger);">RAT Rework</div>
         <div class="input-row">
             <div class="input-group" style="flex:1"><label>Base Speed (WTG’s per day)</label><input type="number" id="editRatSpeed" step="0.1" onchange="updateRatVal()"></div>
-            <div class="input-group" style="flex:1"><label>Techs</label><input type="number" id="editRatTechs" onchange="updateRatVal()"></div>
+            <div class="input-group" style="flex:1"><label>Hourly Rate (Per Tech)</label><input type="number" id="editRatRate" onchange="updateRatVal()"></div>
         </div>
         <div class="input-row">
+            <div class="input-group" style="flex:1">
+                <label>Techs</label>
+                <input type="number" id="editRatTechs" onchange="updateRatVal()">
+            </div>
             <div class="input-group" style="flex:1">
                 <label>Mobilization</label>
                 <input type="number" id="editRatMob" onchange="updateRatVal()">
             </div>
+        </div>
+        <div class="input-row">
             <div class="input-group" style="flex:1">
                 <label>Accom. (Per Tech/Day)</label>
                 <input type="number" id="editRatAcc" onchange="updateRatVal()">
             </div>
+            <div class="input-group" style="flex:1">
+                <label>Idle Rate ($/hr per tech)</label>
+                <input type="number" id="editRatIdle" onchange="updateRatVal()">
+            </div>
         </div>
-        <div class="input-group"><label>Idle Rate ($/hr per tech)</label><input type="number" id="editRatIdle" onchange="updateRatVal()"></div>
         <div class="input-group">
             <label>RAT expected idle time %</label>
             <input type="range" id="editRatRiskRange" min="0" max="100" step="5" oninput="document.getElementById('editRatRiskVal').innerText=this.value+'%'; document.getElementById('editRatRisk').value=this.value/100; updateRatVal()">
@@ -297,17 +306,14 @@
         return totalMins / (baseMinsPerWTG + addedTime);
     }
 
-    // Accommodation Helper with Sunday Rule
     function getAccomTotal(activeDays, weatherDays, techs, dayRate) {
         const totalDuration = activeDays + weatherDays;
         if (totalDuration <= 0) return 0;
-        
         let billableDays = totalDuration;
         if (totalDuration >= 7) {
             const extraSundays = Math.floor(totalDuration / 7);
             billableDays += extraSundays;
         }
-        
         return billableDays * techs * dayRate;
     }
 
@@ -321,7 +327,6 @@
         const downRate = mw * energyPrice * cap;
         const shiftLength = parseFloat(document.getElementById('shiftLength').value);
 
-        // Aerones
         const a_speed = getAdjustedSpeed(data.aerones.speed, 'aerones');
         const a_actDays = count / a_speed;
         const a_wDays = a_actDays * data.aerones.risk;
@@ -331,7 +336,6 @@
         const a_down = a_actDays * shiftLength * downRate;
         const a_total = a_base + a_idle + a_down;
 
-        // Drone
         const d_speed = getAdjustedSpeed(data.drone.speed, 'drone');
         const d_actDays = count / d_speed;
         const d_wDays = d_actDays * data.drone.risk;
@@ -340,7 +344,6 @@
         const d_idle = d_wDays * shiftLength * data.drone.techs * data.drone.idleRate;
         const d_down = d_actDays * shiftLength * downRate;
 
-        // Rework
         const r_count = count * rPct;
         let r_serv = 0, r_idl = 0, r_dwn = 0;
         if (r_count > 0) {
@@ -369,7 +372,7 @@
                 <td style="font-weight:700;">${money(a_total/count)}</td>
             </tr>
             <tr>
-                <td><strong>Drone + FP Rework</strong></td>
+                <td><strong>Drone + RAT Rework</strong></td>
                 <td>${d_speed.toFixed(1)}</td>
                 <td>${money(d_base)}</td>
                 <td>${money(d_idle)}</td>
@@ -384,7 +387,6 @@
         `;
 
         updateChart(a_base, a_idle, a_down, d_base, d_idle, d_down, r_serv, r_idl, r_dwn);
-        
         const banner = document.getElementById('savingsBanner');
         if(a_total < d_total) {
             banner.classList.remove('hidden');
@@ -399,7 +401,7 @@
         myChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Aerones Robot', 'Drone + FP Rework'],
+                labels: ['Aerones Robot', 'Drone + RAT Rework'],
                 datasets: [
                     { label: 'Base Service', data: [a_b, d_b], backgroundColor: '#1C67A1' },
                     { label: 'Idle', data: [a_i, d_i], backgroundColor: '#93C5FD' },
@@ -434,6 +436,7 @@
         document.getElementById('editRisk').value = d.risk;
         
         document.getElementById('editRatSpeed').value = m.speed;
+        document.getElementById('editRatRate').value = m.rate;
         document.getElementById('editRatTechs').value = m.techs;
         document.getElementById('editRatMob').value = m.mob;
         document.getElementById('editRatAcc').value = m.acc;
@@ -461,6 +464,7 @@
     function updateRatVal() {
         const m = ACTIVE_DATA.manual;
         m.speed = parseFloat(document.getElementById('editRatSpeed').value);
+        m.rate = parseFloat(document.getElementById('editRatRate').value);
         m.techs = parseFloat(document.getElementById('editRatTechs').value);
         m.mob = parseFloat(document.getElementById('editRatMob').value);
         m.acc = parseFloat(document.getElementById('editRatAcc').value);
