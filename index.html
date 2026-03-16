@@ -65,6 +65,13 @@
         .modal-header { font-size: 1.2rem; font-weight: 800; color: var(--brand-dark-blue); margin-bottom: 20px; border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; }
         .btn-done { background: var(--brand-dark-blue); color: white; border: none; padding: 12px; width: 100%; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 25px; }
 
+        .btn-reset { 
+            background: none; border: 1px solid var(--border-light); color: var(--text-muted); padding: 8px; width: 100%; 
+            font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 15px; font-size: 0.7rem; text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .btn-reset:hover { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; }
+
         @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
@@ -135,6 +142,8 @@
                 </p>
                 <input type="range" id="reworkPct" min="0" max="100" step="1" value="25" oninput="document.getElementById('reworkVal').innerText=this.value+'%'; calculate()">
             </div>
+
+            <button class="btn-reset" onclick="resetDefaults()">Reset Region to Defaults</button>
         </div>
 
         <div class="results-area">
@@ -290,9 +299,27 @@
 
     function loadDefaults() {
         const region = document.getElementById('regionSelector').value;
-        ACTIVE_DATA = JSON.parse(JSON.stringify(CONFIG_ZONE[region]));
+        const cached = localStorage.getItem('lps_calc_' + region);
+        if (cached) {
+            ACTIVE_DATA = JSON.parse(cached);
+        } else {
+            ACTIVE_DATA = JSON.parse(JSON.stringify(CONFIG_ZONE[region]));
+        }
         CURRENCY = CONFIG_ZONE[region].symbol;
         calculate();
+    }
+
+    function resetDefaults() {
+        const region = document.getElementById('regionSelector').value;
+        if(confirm("Are you sure you want to reset " + region + " to original company defaults?")) {
+            localStorage.removeItem('lps_calc_' + region);
+            loadDefaults();
+        }
+    }
+
+    function saveToCache() {
+        const region = document.getElementById('regionSelector').value;
+        localStorage.setItem('lps_calc_' + region, JSON.stringify(ACTIVE_DATA));
     }
 
     function getAdjustedSpeed(baseSpeed, type) {
@@ -458,6 +485,7 @@
         d.acc = parseFloat(document.getElementById('editAcc').value);
         d.idleRate = parseFloat(document.getElementById('editIdleRate').value);
         d.risk = parseFloat(document.getElementById('editRisk').value);
+        saveToCache();
         calculate();
     }
 
@@ -470,6 +498,7 @@
         m.acc = parseFloat(document.getElementById('editRatAcc').value);
         m.idleRate = parseFloat(document.getElementById('editRatIdle').value);
         m.risk = parseFloat(document.getElementById('editRatRisk').value);
+        saveToCache();
         calculate();
     }
 
