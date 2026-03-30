@@ -1,508 +1,1110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LPS Inspection Comparison: Robot vs Drone</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/inter.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <style>
-        :root {
-            --brand-dark-blue: #1C67A1;
-            --brand-light-blue: #30A2D6;
-            --brand-orange: #FC6722;
-            --brand-green: #1AC293;
-            --brand-danger: #EF4444; 
-            --bg-body: #F5F7FA;
-            --bg-card: #FFFFFF;
-            --text-main: #1A1A1A;
-            --text-muted: #64748B;
-            --border-light: #E2E8F0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LPS Inspection Cost Comparison</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/inter-ui/3.19.3/inter.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    :root {
+      --brand-dark-blue: #1C67A1;
+      --brand-light-blue: #30A2D6;
+      --brand-orange: #FC6722;
+      --brand-green: #1AC293;
+      --brand-danger: #EF4444;
+      --bg-body: #F5F7FA;
+      --bg-card: #FFFFFF;
+      --text-main: #1A1A1A;
+      --text-muted: #64748B;
+      --border-light: #E2E8F0;
+      --highlight-bg: #fff5eb;
+      --rework-bg: #fff5f5;
+      --rework-border: #fecaca;
+    }
 
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; }
-        
-        nav { background: var(--bg-card); padding: 10px 20px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .logo { height: 24px; display: block; }
-        .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
-        
-        h1 { font-weight: 800; font-size: 1.6rem; margin: 0 0 5px 0; color: var(--brand-dark-blue); letter-spacing: -0.5px; }
-        p.subtitle { color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); margin: 0; padding: 0; }
+    nav { background: var(--bg-card); padding: 10px 20px; border-bottom: 1px solid var(--border-light); display: flex; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .logo { height: 24px; display: block; }
+    .container { max-width: 1400px; margin: 20px auto; padding: 0 20px; }
+    h1 { font-weight: 800; font-size: 1.6rem; margin: 0 0 5px 0; color: var(--brand-dark-blue); letter-spacing: -0.5px; }
+    p.subtitle { color: var(--text-muted); font-size: 0.85rem; line-height: 1.4; margin: 0; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+    .dashboard-grid { display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start; }
+    .card { background: var(--bg-card); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border-light); margin-bottom: 15px; }
+    .card h3 { margin-top: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--brand-light-blue); margin-bottom: 15px; font-weight: 700; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; }
+    .sidebar-card { position: sticky; top: 56px; }
 
-        .card { background: var(--bg-card); border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border-light); margin-bottom: 15px; }
-        .card h3 { margin-top: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--brand-light-blue); margin-bottom: 15px; font-weight: 700; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; }
+    .input-group { margin-bottom: 12px; position: relative; }
+    label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--brand-dark-blue); margin-bottom: 4px; }
+    .input-row { display: flex; gap: 8px; }
+    input, select { width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; background: #fff; font-size: 0.85rem; color: var(--text-main); }
+    input:focus, select:focus { outline: none; border-color: var(--brand-light-blue); box-shadow: 0 0 0 3px rgba(48, 162, 214, 0.1); }
+    .helper-text { font-size: 0.65rem; color: #94a3b8; margin-top: -2px; margin-bottom: 12px; font-style: italic; line-height: 1.3; }
 
-        .input-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--brand-dark-blue); margin-bottom: 4px; }
-        .input-row { display: flex; gap: 8px; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #CBD5E1; border-radius: 6px; background: #fff; font-size: 0.85rem; color: var(--text-main); }
-        
-        .rework-box { background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px; margin-top: 15px; }
-        .rework-title { color: #B91C1C; font-weight: 700; font-size: 0.75rem; margin-bottom: 8px; display:flex; justify-content:space-between; }
+    .btn-reset { background: #F1F5F9; color: var(--text-muted); border: 1px solid #CBD5E1; padding: 8px; font-size: 0.75rem; font-weight: 600; border-radius: 6px; cursor: pointer; width: 100%; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .btn-reset:hover { background: #E2E8F0; color: var(--brand-dark-blue); border-color: var(--brand-dark-blue); }
+    .btn-primary { background: var(--brand-orange); color: white; border: none; padding: 10px; width: 100%; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 5px; font-size: 0.9rem; }
+    .btn-primary:hover { background-color: #e55a1b; }
+    .btn-print { flex: 1; background: transparent; color: var(--brand-dark-blue); border: 1px solid var(--brand-dark-blue); padding: 8px; font-weight: 600; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: background 0.2s; height: 38px; }
+    .btn-print:hover { background: #f0f7fc; }
 
-        .savings-banner { background: linear-gradient(to right, #f0fdf4, #ffffff); border: 1px solid #bbf7d0; border-left: 5px solid var(--brand-green); padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 15px; }
-        .savings-text { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #166534; letter-spacing: 0.5px; }
-        .savings-amount { font-size: 1.2rem; font-weight: 800; color: var(--brand-green); display: block; }
-        .hidden { display: none !important; }
+    .info-icon { display: inline-block; width: 12px; height: 12px; background: #e2e8f0; color: #64748B; border-radius: 50%; text-align: center; line-height: 12px; font-size: 9px; font-weight: bold; margin-left: 4px; cursor: help; position: relative; vertical-align: middle; }
+    .info-icon:hover::after { content: attr(data-tooltip); position: absolute; left: 20px; top: -5px; width: 220px; background: #1e293b; color: #fff; padding: 8px 10px; border-radius: 6px; font-size: 0.7rem; line-height: 1.3; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-weight: 400; text-align: left; white-space: normal; }
+    th .info-icon:hover::after { left: auto; right: 0; top: 20px; }
 
-        .chart-container { height: 320px; position: relative; width: 100%; }
-        
-        .table-responsive { width: 100%; overflow-x: auto; margin-top: 5px; }
-        table { width: 100%; min-width: 900px; border-collapse: collapse; }
-        th { text-align: center; font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; padding: 8px 4px; border-bottom: 2px solid var(--border-light); vertical-align: bottom; }
-        th.rework-header { background: #fff5f5; color: #b91c1c; border-bottom: 2px solid #fecaca; }
-        th:first-child { text-align: left; }
-        td { text-align: center; padding: 8px 4px; border-bottom: 1px solid var(--border-light); font-size: 0.7rem; }
-        .total-cost { font-weight: 800; color: var(--brand-dark-blue); }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 35, 65, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 90%; max-width: 650px; border-radius: 12px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto; }
-        .modal-close { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; background: #F1F5F9; color: #64748B; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; cursor: pointer; }
-        .modal-header { font-size: 1.2rem; font-weight: 800; color: var(--brand-dark-blue); margin-bottom: 20px; border-bottom: 1px solid #E2E8F0; padding-bottom: 15px; }
-        .btn-done { background: var(--brand-dark-blue); color: white; border: none; padding: 12px; width: 100%; font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 25px; }
+    .advanced-toggle { background: #f1f5f9; color: var(--text-muted); padding: 8px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-light); margin-bottom: 10px; transition: background 0.2s; }
+    .advanced-toggle:hover { background: #e2e8f0; }
+    #advArrow { transition: transform 0.3s ease; }
+    .advanced-toggle.open #advArrow { transform: rotate(180deg); }
+    .advanced-section { display: none; padding-top: 5px; }
+    .advanced-section.open { display: block; }
 
-        .btn-reset { 
-            background: none; border: 1px solid var(--border-light); color: var(--text-muted); padding: 8px; width: 100%; 
-            font-weight: 600; border-radius: 6px; cursor: pointer; margin-top: 15px; font-size: 0.7rem; text-transform: uppercase;
-            transition: all 0.2s;
-        }
-        .btn-reset:hover { background: #FEE2E2; color: #B91C1C; border-color: #FECACA; }
+    .profile-card { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+    .profile-header { font-size: 0.8rem; font-weight: 700; color: var(--brand-dark-blue); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E2E8F0; padding-bottom: 6px; }
+    .section-note { font-size: 0.68rem; color: var(--text-muted); margin: -2px 0 10px 0; line-height: 1.3; }
+    .internal-box { border: 1px dashed #cbd5e1; background: #f8fafc; border-radius: 6px; padding: 10px; margin-bottom: 12px; }
+    .internal-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.6px; margin-bottom: 8px; }
+    .checkbox-row { display: flex; gap: 8px; align-items: center; font-size: 0.75rem; color: var(--text-main); }
+    .checkbox-row input { width: auto; margin: 0; }
 
-        @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
-    </style>
+    .slider-group { margin-bottom: 10px; }
+    .slider-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; font-weight: 600; color: var(--text-main); margin-bottom: 4px; }
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 4px 0; cursor: pointer; }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #E2E8F0; border-radius: 2px; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 14px; width: 14px; border-radius: 50%; background: var(--brand-dark-blue); margin-top: -5px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .limit-text { font-size: 0.7rem; color: #64748B; margin-top: -4px; display: flex; justify-content: space-between; font-weight: 500; }
+    .limit-val { font-weight: 700; color: var(--brand-orange); }
+    .action-link { font-size: 0.65rem; color: var(--brand-light-blue); text-decoration: none; cursor: pointer; margin-left: 6px; font-weight: 600; }
+    .action-link:hover { text-decoration: underline; color: var(--brand-dark-blue); }
+
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .metric-box { border: 1px solid #E2E8F0; border-radius: 6px; padding: 10px; background: #fff; }
+    .metric-label { font-size: 0.66rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; display:block; margin-bottom: 4px; }
+    .metric-value { font-size: 0.95rem; color: var(--brand-dark-blue); font-weight: 800; }
+
+    .savings-banner { background: linear-gradient(to right, #f0fdf4, #ffffff); border: 1px solid #bbf7d0; border-left: 5px solid var(--brand-green); padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; color: #14532d; gap: 15px; }
+    .savings-text { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #166534; letter-spacing: 0.5px; }
+    .savings-amount { font-size: 1.2rem; font-weight: 800; color: var(--brand-green); display: block; margin-top: 0px; }
+    .hidden { display: none !important; }
+    .payback-section { border-left: 1px solid #bbf7d0; padding-left: 15px; }
+
+    .chart-container { height: 320px; position: relative; width: 100%; }
+    .chart-toggles { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .toggle-pill { padding: 6px 12px; border-radius: 8px; border: 1px solid #E2E8F0; font-size: 0.75rem; font-weight: 600; cursor: pointer; background: #F8FAFC; color: var(--text-main); transition: all 0.2s; user-select: none; opacity: 0.6; }
+    .toggle-pill:hover { background: #fff; border-color: #CBD5E1; opacity: 1; }
+    .toggle-pill.active { background: white; border-color: var(--brand-dark-blue); color: var(--brand-dark-blue); opacity: 1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .toggle-pill.active.aerones { border-color: var(--brand-orange); color: var(--brand-orange); }
+    .toggle-pill.internal { border-style: dashed; }
+
+    .table-responsive { width: 100%; overflow-x: auto; margin-top: 5px; }
+    table { width: 100%; min-width: 920px; border-collapse: collapse; table-layout: auto; }
+    th { text-align: center; font-size: 0.67rem; color: var(--text-muted); text-transform: uppercase; padding: 8px 4px; border-bottom: 2px solid var(--border-light); vertical-align: bottom; white-space: normal; line-height: 1.1; }
+    th:first-child, td:first-child { text-align: left; }
+    th.rework-header { background: var(--rework-bg); color: #b91c1c; border-bottom: 2px solid var(--rework-border); }
+    td { text-align: center; padding: 8px 4px; border-bottom: 1px solid var(--border-light); font-size: 0.75rem; vertical-align: middle; white-space: nowrap; }
+    .total-cost { font-weight: 800; color: var(--brand-dark-blue); font-size: 0.8rem; }
+    tr.winner td { background-color: var(--highlight-bg); border-bottom: 1px solid #ffd8be; }
+    tr.winner td:first-child { border-left: 4px solid var(--brand-orange); color: var(--brand-orange); font-weight: 700; }
+    tr.winner .total-cost { color: var(--brand-orange); }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 35, 65, 0.6); z-index: 1000; display: none; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+    .modal-overlay.active { display: flex; }
+    .modal-content { background: white; width: 90%; max-width: 560px; border-radius: 12px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; animation: slideUp 0.3s ease; max-height: 88vh; overflow-y: auto; }
+    .modal-close { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: #999; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .print-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+    .print-toggle-container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
+    .switch-label-tiny { font-size: 0.65rem; color: var(--text-muted); margin-bottom: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .mini-switch { position: relative; display: inline-block; width: 30px; height: 16px; }
+    .mini-switch input { opacity: 0; width: 0; height: 0; }
+    .mini-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+    .mini-slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .mini-slider { background-color: var(--brand-dark-blue); }
+    input:checked + .mini-slider:before { transform: translateX(14px); }
+
+    .print-only-header, #printOnlySummary { display: none !important; }
+
+    @media (max-width: 1400px) {
+      .container { margin: 10px auto; padding: 0 15px; }
+      nav { padding: 8px 15px; }
+      h1 { font-size: 1.3rem; }
+      .dashboard-grid { grid-template-columns: 270px 1fr; gap: 15px; }
+      .card.sidebar-card { padding: 12px; }
+      .input-group { margin-bottom: 8px; }
+      input, select { padding: 6px; font-size: 0.75rem; }
+      label { font-size: 0.7rem; margin-bottom: 2px; }
+      .card { padding: 12px; margin-bottom: 12px; }
+      .card h3 { margin-bottom: 8px; font-size: 0.7rem; }
+      .chart-container { height: 240px; }
+      th { font-size: 0.63rem; padding: 6px 2px; }
+      td { padding: 6px 2px; font-size: 0.72rem; }
+      p.subtitle { display: none; }
+    }
+
+    @media (max-width: 900px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .sidebar-card { position: static; }
+      .chart-container { height: 280px; }
+      .savings-banner { grid-template-columns: 1fr; }
+      .payback-section { border-left: none; border-top: 1px solid #bbf7d0; padding-left: 0; padding-top: 12px; }
+    }
+
+    @media print {
+      @page { margin: 0.5cm; }
+      body { -webkit-print-color-adjust: exact; margin: 0; padding: 0; zoom: 0.85; }
+      nav, .sidebar-card, .btn-primary, .print-row, .advanced-toggle, #advancedSection, .chart-toggles { display: none !important; }
+      .container { max-width: 100%; margin: 0; padding: 0; }
+      .dashboard-grid { display: block; }
+      header { margin-bottom: 10px; }
+      .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; margin-bottom: 15px; padding: 15px; }
+      .savings-banner { border: 1px solid #aaa; margin-bottom: 15px; }
+      .print-only-header { display: block !important; margin-bottom: 20px; border-bottom: 2px solid #E2E8F0; padding-bottom: 20px; }
+      .print-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+      .print-label { font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.7rem; display: block; }
+      .print-val { font-size: 1rem; color: var(--brand-dark-blue); font-weight: 600; }
+      #printOnlySummary.visible { display: block !important; margin-top: 0; page-break-before: always; }
+      .print-title-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--brand-orange); margin-bottom: 20px; padding-bottom: 5px; }
+      h2.print-title { color: var(--brand-dark-blue); margin: 0; font-size: 1.4rem; }
+      .print-date { font-size: 0.85rem; color: var(--text-muted); }
+      .summary-section { margin-bottom: 30px; }
+      .summary-section h3 { font-size: 1rem; color: var(--brand-light-blue); margin-bottom: 10px; border-bottom: 1px solid #E2E8F0; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .params-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 0.9rem; }
+      .param-item { display: flex; justify-content: space-between; border-bottom: 1px dashed #E2E8F0; padding-bottom: 4px; }
+      .param-label { color: #64748B; font-weight: 500; }
+      .param-value { color: #1A1A1A; font-weight: 700; }
+      .print-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+      .print-table th { background: #F1F5F9; color: var(--brand-dark-blue); text-align: left; padding: 10px 8px; border-bottom: 2px solid #CBD5E1; font-weight: 700; }
+      .print-table td { padding: 10px 8px; border-bottom: 1px solid #E2E8F0; color: #334155; }
+      .print-table tr:nth-child(even) { background-color: #F8FAFC; }
+    }
+  </style>
 </head>
 <body>
-
 <nav>
-    <img src="https://aerones.com/wp-content/uploads/2022/02/aerones-logo-rgb.svg" alt="Aerones" class="logo">
+  <img src="https://aerones.com/wp-content/uploads/2022/02/aerones-logo-rgb.svg" alt="Aerones" class="logo">
 </nav>
 
-<div class="container">
-    <header>
-        <h1>LPS Inspection Comparison</h1>
-        <p class="subtitle">Robot (Contact Measurement) vs. Drone (+ RAT Rework).</p>
-    </header>
-
-    <div class="dashboard-grid">
-        <div class="card sidebar-card">
-            <h3>Campaign Parameters</h3>
-            <div class="input-group">
-                <label>Region Defaults</label>
-                <select id="regionSelector" onchange="loadDefaults()">
-                    <option value="EU">Europe (EUR €)</option>
-                    <option value="USA" selected>USA (USD $)</option>
-                    <option value="AUS">Australia (AUD $)</option>
-                </select>
-            </div>
-
-            <div class="input-row">
-                <div class="input-group" style="flex:1">
-                    <label>Turbines</label>
-                    <input type="number" id="numTurbines" value="20" onchange="calculate()">
-                </div>
-                <div class="input-group" style="flex:1">
-                    <label>MW Class</label>
-                    <input type="number" id="turbineModel" value="3.0" step="0.1" onchange="calculate()">
-                </div>
-            </div>
-
-            <div class="input-row">
-                <div class="input-group" style="flex:1">
-                    <label>Energy Price / MWh</label>
-                    <input type="number" id="marketValue" value="78" onchange="calculate()">
-                </div>
-                <div class="input-group" style="flex:1">
-                    <label>Capacity Factor %</label>
-                    <input type="number" id="capacityFactor" value="35" onchange="calculate()">
-                </div>
-            </div>
-
-            <div class="input-row">
-                <div class="input-group" style="flex:1">
-                    <label>Receptors / Blade</label>
-                    <input type="number" id="receptorCount" value="3" onchange="calculate()">
-                </div>
-                <div class="input-group" style="flex:1">
-                    <label>Shift Length (Hr)</label>
-                    <input type="number" id="shiftLength" value="10" onchange="calculate()">
-                </div>
-            </div>
-
-            <div class="rework-box">
-                <div class="rework-title">
-                    <span>⚠️ False Positive Rate</span>
-                    <span id="reworkVal">25%</span>
-                </div>
-                <p style="font-size:0.65rem; color:#7F1D1D; margin-top:0; line-height:1.3; margin-bottom:10px;">
-                    Rework due to false positives: Percentage of turbines needing rope access after drone flight.
-                </p>
-                <input type="range" id="reworkPct" min="0" max="100" step="1" value="25" oninput="document.getElementById('reworkVal').innerText=this.value+'%'; calculate()">
-            </div>
-
-            <button class="btn-reset" onclick="resetDefaults()">Reset Region to Defaults</button>
-        </div>
-
-        <div class="results-area">
-            <div id="savingsBanner" class="savings-banner hidden">
-                <div>
-                    <div class="savings-text">Aerones Savings</div>
-                    <span class="savings-amount" id="savingsAmount">€0</span>
-                    <div id="savingsPct" style="font-weight:700; color:#15803d; font-size:0.9rem;">0% Cheaper</div>
-                </div>
-                <div>
-                    <div class="savings-text">Reason</div>
-                    <div style="font-size:0.8rem; color:#14532d;">Eliminating false positive RAT rework.</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>Total Cost Comparison</h3>
-                <div class="chart-container">
-                    <canvas id="costChart"></canvas>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="table-responsive">
-                    <table id="breakdownTable">
-                        <thead>
-                            <tr>
-                                <th rowspan="2">Method</th>
-                                <th rowspan="2">Speed<br>(WTG/Day)</th>
-                                <th rowspan="2">Base Service</th>
-                                <th rowspan="2">Idle</th>
-                                <th rowspan="2">Downtime</th>
-                                <th colspan="3" class="rework-header">RAT Rework Phase</th>
-                                <th rowspan="2" style="border-left:2px solid #E2E8F0;">Total<br>Campaign</th>
-                                <th rowspan="2">Total / WTG<br>(Excl. Down)</th>
-                                <th rowspan="2">Total / WTG<br>(Incl. Down)</th>
-                            </tr>
-                            <tr>
-                                <th class="rework-header">Service</th>
-                                <th class="rework-header">Idle</th>
-                                <th class="rework-header">Downtime</th>
-                            </tr>
-                        </thead>
-                        <tbody id="breakdownTableBody"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+<div id="profileModal" class="modal-overlay">
+  <div class="modal-content">
+    <span class="modal-close" onclick="closeModal()">&times;</span>
+    <h3 style="margin-top:0; color:var(--brand-dark-blue);">Edit Service Profile</h3>
+    <div id="modalBody"></div>
+    <button class="btn-primary" onclick="closeModal()" style="margin-top:20px;">Done</button>
+  </div>
 </div>
 
-<div id="editProfileModal" class="modal-overlay">
-    <div class="modal-content">
-        <span class="modal-close" onclick="closeEditModal()">&times;</span>
-        <div id="editModalHeader" class="modal-header">Edit Profile</div>
-        <input type="hidden" id="editKey"> 
-        
-        <div class="input-group">
-            <label>Service Price (Per WTG)</label>
-            <input type="number" id="editPrice" onchange="updateProfileVal()">
+<div id="clientModal" class="modal-overlay">
+  <div class="modal-content" style="max-width: 400px;">
+    <span class="modal-close" onclick="closeClientModal()">&times;</span>
+    <h3 style="margin-top:0; color:var(--brand-dark-blue);">Report Details</h3>
+    <p style="font-size:0.85rem; color:#64748B; margin-bottom:15px;">Enter details to customize the PDF report.</p>
+    <div class="input-group">
+      <label>Client Name</label>
+      <input type="text" id="clientNameInput" placeholder="e.g. Vestas">
+    </div>
+    <div class="input-group">
+      <label>Project Name</label>
+      <input type="text" id="projectNameInput" placeholder="e.g. LPS Inspection Campaign">
+    </div>
+    <button class="btn-primary" onclick="saveClientInfoAndPrint()" style="margin-top:10px;">Continue to Print</button>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <h1>LPS inspection cost comparison</h1>
+    <p class="subtitle">Comparative simulation of LPS inspection methods, project duration, downtime loss, idle cost, and total campaign cost.</p>
+  </header>
+
+  <div class="print-only-header" id="printHeader"></div>
+
+  <div class="dashboard-grid">
+    <div class="card sidebar-card">
+      <h3>Key Parameters</h3>
+
+      <div class="input-group">
+        <label>Region (Sets Defaults)</label>
+        <select id="regionSelector" onchange="handleRegionChange()">
+          <option value="EU">Europe (EUR €)</option>
+          <option value="USA" selected>USA (USD $)</option>
+          <option value="AUS">Australia (AUD $)</option>
+        </select>
+      </div>
+
+      <div class="input-row">
+        <div class="input-group" style="flex:1">
+          <label>Turbines</label>
+          <input type="number" id="numTurbines" value="20" onchange="calculate()">
         </div>
-        <div class="input-row">
-            <div class="input-group" style="flex:1">
-                <label>Base Speed (WTG’s per day)</label>
-                <input type="number" id="editSpeed" step="0.1" onchange="updateProfileVal()">
-            </div>
-            <div class="input-group" style="flex:1">
-                <label>Techs (Count)</label>
-                <input type="number" id="editTechs" onchange="updateProfileVal()">
-            </div>
+        <div class="input-group" style="flex:1">
+          <label>MW Class</label>
+          <input type="number" id="turbineModel" value="3.0" step="0.1" onchange="calculate()" onwheel="handleWheel(event)">
         </div>
-        <div class="input-row">
-            <div class="input-group" style="flex:1">
-                <label>Mobilization</label>
-                <input type="number" id="editMob" onchange="updateProfileVal()">
-            </div>
-            <div class="input-group" style="flex:1">
-                <label>Accom. (Per Tech/Day)</label>
-                <input type="number" id="editAcc" onchange="updateProfileVal()">
-            </div>
+      </div>
+
+      <div class="input-row">
+        <div class="input-group" style="flex:1">
+          <label>Energy Price / MWh</label>
+          <input type="number" id="marketValue" value="78" onchange="calculate()">
         </div>
-        <div class="input-group"><label>Idle Rate ($/hr per tech)</label><input type="number" id="editIdleRate" onchange="updateProfileVal()"></div>
-        <div class="input-group">
-            <label>Expected idle time %</label>
-            <input type="range" id="editRiskRange" min="0" max="100" step="5" oninput="document.getElementById('editRiskVal').innerText=this.value+'%'; document.getElementById('editRisk').value=this.value/100; updateProfileVal()">
-            <span id="editRiskVal" style="font-weight:700; font-size:0.8rem;">20%</span>
-            <input type="hidden" id="editRisk">
+        <div class="input-group" style="flex:1">
+          <label>Capacity Factor %</label>
+          <input type="number" id="capacityFactor" value="35" onchange="calculate()">
+        </div>
+      </div>
+      <div class="helper-text">Used to translate inspection duration into downtime value.</div>
+
+      <div class="input-row">
+        <div class="input-group" style="flex:1">
+          <label>Receptors / Blade <span class="info-icon" data-tooltip="Inspection speed is adjusted upward or downward depending on how many receptors must be checked per blade.">?</span></label>
+          <input type="number" id="receptorCount" value="3" onchange="calculate()">
+        </div>
+        <div class="input-group" style="flex:1">
+          <label>Shift Length (Hr)</label>
+          <input type="number" id="shiftLength" value="10" onchange="calculate()">
+        </div>
+      </div>
+
+      <button class="btn-reset" onclick="resetToDefaults()"><span>↺</span> Reset to Regional Defaults</button>
+
+      <details class="internal-box">
+        <summary class="internal-title" style="cursor:pointer; margin-bottom:0;">Options</summary>
+        <div style="margin-top:10px;">
+          <label class="checkbox-row">
+            <input type="checkbox" id="internalDroneToggle" onchange="toggleInternalDrone()">
+            <span>Show hidden drone workflow</span>
+          </label>
+          <div class="section-note" style="margin-top:6px; margin-bottom:0;">When enabled, the drone profile and drone-specific rework breakdown appear in the chart, table, and printout.</div>
+        </div>
+      </details>
+
+      <div id="advancedSection" style="display:none;">
+        <input type="checkbox" id="show_aerones" checked style="display:none">
+        <input type="checkbox" id="show_rats" checked style="display:none">
+        <input type="checkbox" id="show_plat" checked style="display:none">
+        <input type="checkbox" id="show_pick" checked style="display:none">
+        <input type="checkbox" id="show_drone" style="display:none">
+
+        <div class="profile-card" id="card_aerones">
+          <div class="profile-header">Aerones Robot</div>
+          <div class="section-note">Fixed per WTG service model with LPS-specific speed logic.</div>
+          <div class="input-row">
+            <div class="input-group"><label>Price / WTG</label><input type="number" id="prof_aerones_price" value="2150" onchange="calculate()"></div>
+            <div class="input-group"><label>Base Speed (WTG/Day)</label><input type="number" id="prof_aerones_speed" value="3" step="0.1" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Techs</label><input type="number" id="prof_aerones_techs" value="3" onchange="calculate()"></div>
+            <div class="input-group"><label>Idle Rate / Hr / Tech<span class="info-icon" data-tooltip="Weather idle cost per deployed team per hour.">?</span></label><input type="number" id="prof_aerones_idle" value="110" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Mob Fee</label><input type="number" id="prof_aerones_mob" value="4500" onchange="calculate()"></div>
+            <div class="input-group"><label>Accom. (Tech/Day) <span class="action-link" onclick="copyAccom('aerones')">↳ Copy to all</span></label><input type="number" id="prof_aerones_acc" value="160" onchange="calculate()"></div>
+          </div>
+          <div class="input-group">
+            <div class="slider-header">
+              <div>Teams Deployed <span class="action-link" onclick="copyTeams('aerones')">↳ Copy to all</span></div>
+              <span id="label_teams_aerones">1</span>
+            </div>
+            <input type="range" id="prof_aerones_teams" min="1" max="10" step="1" value="1" oninput="updateTeamsLabel('aerones', this.value); calculate()">
+          </div>
+          <label style="font-size:0.75rem; margin-bottom:2px;">Weather Idle %</label>
+          <input type="range" id="prof_aerones_risk" min="0" max="100" step="5" value="15" oninput="calculate()">
+          <div class="limit-text"><span></span><span class="limit-val" id="val_aerones_risk">15%</span></div>
         </div>
 
-        <div class="modal-section-title" style="margin-top:20px; font-weight:800; color:var(--brand-danger);">RAT Rework</div>
-        <div class="input-row">
-            <div class="input-group" style="flex:1"><label>Base Speed (WTG’s per day)</label><input type="number" id="editRatSpeed" step="0.1" onchange="updateRatVal()"></div>
-            <div class="input-group" style="flex:1"><label>Hourly Rate (Per Tech)</label><input type="number" id="editRatRate" onchange="updateRatVal()"></div>
-        </div>
-        <div class="input-row">
-            <div class="input-group" style="flex:1">
-                <label>Techs</label>
-                <input type="number" id="editRatTechs" onchange="updateRatVal()">
+        <div class="profile-card" id="card_rats">
+          <div class="profile-header">Rope Access</div>
+          <div class="section-note">Hourly team cost with slower LPS inspection speed and higher weather exposure.</div>
+          <div class="input-row">
+            <div class="input-group"><label>Techs</label><input type="number" id="prof_rats_techs" value="3" onchange="calculate()"></div>
+            <div class="input-group"><label>Base Speed (WTG/Day)</label><input type="number" id="prof_rats_speed" value="1.75" step="0.1" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Tech Rate/Hr</label><input type="number" id="prof_rats_rate_tech" value="140" onchange="calculate()"></div>
+            <div class="input-group"><label>Equipment Rate/Hr</label><input type="number" id="prof_rats_rate_mach" value="0" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Idle Rate / Hr /Tech <span class="info-icon" data-tooltip="Weather idle cost per deployed team per hour.">?</span></label><input type="number" id="prof_rats_idle" value="140" onchange="calculate()"></div>
+            <div class="input-group"><label>Mob Fee</label><input type="number" id="prof_rats_mob" value="4500" onchange="calculate()"></div>
+          </div>
+          <div class="input-group"><label>Accom. (Tech/Day)</label><input type="number" id="prof_rats_acc" value="160" onchange="calculate()"></div>
+          <div class="input-group">
+            <div class="slider-header">
+              <div>Teams Deployed <span class="action-link" onclick="copyTeams('rats')">↳ Copy to all</span></div>
+              <span id="label_teams_rats">1</span>
             </div>
-            <div class="input-group" style="flex:1">
-                <label>Mobilization</label>
-                <input type="number" id="editRatMob" onchange="updateRatVal()">
-            </div>
+            <input type="range" id="prof_rats_teams" min="1" max="10" step="1" value="1" oninput="updateTeamsLabel('rats', this.value); calculate()">
+          </div>
+          <label style="font-size:0.75rem; margin-bottom:2px;">Weather Idle %</label>
+          <input type="range" id="prof_rats_risk" min="0" max="100" step="5" value="30" oninput="calculate()">
+          <div class="limit-text"><span></span><span class="limit-val" id="val_rats_risk">30%</span></div>
         </div>
-        <div class="input-row">
-            <div class="input-group" style="flex:1">
-                <label>Accom. (Per Tech/Day)</label>
-                <input type="number" id="editRatAcc" onchange="updateRatVal()">
+
+        <div class="profile-card" id="card_plat">
+          <div class="profile-header">Suspended Platform</div>
+          <div class="section-note">Hourly team plus equipment cost with medium weather exposure.</div>
+          <div class="input-row">
+            <div class="input-group"><label>Techs</label><input type="number" id="prof_plat_techs" value="3" onchange="calculate()"></div>
+            <div class="input-group"><label>Base Speed (WTG/Day)</label><input type="number" id="prof_plat_speed" value="2.2" step="0.1" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Tech Rate/Hr</label><input type="number" id="prof_plat_rate_tech" value="140" onchange="calculate()"></div>
+            <div class="input-group"><label>Equipment Rate/Hr</label><input type="number" id="prof_plat_rate_mach" value="35" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Idle Rate / Hr <span class="info-icon" data-tooltip="Weather idle cost per deployed team per hour.">?</span></label><input type="number" id="prof_plat_idle" value="160" onchange="calculate()"></div>
+            <div class="input-group"><label>Mob Fee</label><input type="number" id="prof_plat_mob" value="7000" onchange="calculate()"></div>
+          </div>
+          <div class="input-group"><label>Accom. (Tech/Day)</label><input type="number" id="prof_plat_acc" value="160" onchange="calculate()"></div>
+          <div class="input-group">
+            <div class="slider-header">
+              <div>Teams Deployed <span class="action-link" onclick="copyTeams('plat')">↳ Copy to all</span></div>
+              <span id="label_teams_plat">1</span>
             </div>
-            <div class="input-group" style="flex:1">
-                <label>Idle Rate ($/hr per tech)</label>
-                <input type="number" id="editRatIdle" onchange="updateRatVal()">
+            <input type="range" id="prof_plat_teams" min="1" max="10" step="1" value="1" oninput="updateTeamsLabel('plat', this.value); calculate()">
+          </div>
+          <label style="font-size:0.75rem; margin-bottom:2px;">Weather Idle %</label>
+          <input type="range" id="prof_plat_risk" min="0" max="100" step="5" value="25" oninput="calculate()">
+          <div class="limit-text"><span></span><span class="limit-val" id="val_plat_risk">25%</span></div>
+        </div>
+
+        <div class="profile-card" id="card_pick">
+          <div class="profile-header">Cherry Picker</div>
+          <div class="section-note">Hourly team plus equipment cost with moderate LPS inspection speed.</div>
+          <div class="input-row">
+            <div class="input-group"><label>Techs</label><input type="number" id="prof_pick_techs" value="2" onchange="calculate()"></div>
+            <div class="input-group"><label>Base Speed (WTG/Day)</label><input type="number" id="prof_pick_speed" value="3.1" step="0.1" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Tech Rate/Hr</label><input type="number" id="prof_pick_rate_tech" value="140" onchange="calculate()"></div>
+            <div class="input-group"><label>Equipment Rate/Hr</label><input type="number" id="prof_pick_rate_mach" value="333" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Idle Rate / Hr / Tech<span class="info-icon" data-tooltip="Weather idle cost per deployed team per hour.">?</span></label><input type="number" id="prof_pick_idle" value="190" onchange="calculate()"></div>
+            <div class="input-group"><label>Mob Fee</label><input type="number" id="prof_pick_mob" value="7000" onchange="calculate()"></div>
+          </div>
+          <div class="input-group"><label>Accom. (Tech/Day)</label><input type="number" id="prof_pick_acc" value="160" onchange="calculate()"></div>
+          <div class="input-group">
+            <div class="slider-header">
+              <div>Teams Deployed <span class="action-link" onclick="copyTeams('pick')">↳ Copy to all</span></div>
+              <span id="label_teams_pick">1</span>
             </div>
+            <input type="range" id="prof_pick_teams" min="1" max="10" step="1" value="1" oninput="updateTeamsLabel('pick', this.value); calculate()">
+          </div>
+          <label style="font-size:0.75rem; margin-bottom:2px;">Weather Idle %</label>
+          <input type="range" id="prof_pick_risk" min="0" max="100" step="5" value="20" oninput="calculate()">
+          <div class="limit-text"><span></span><span class="limit-val" id="val_pick_risk">20%</span></div>
         </div>
-        <div class="input-group">
-            <label>RAT expected idle time %</label>
-            <input type="range" id="editRatRiskRange" min="0" max="100" step="5" oninput="document.getElementById('editRatRiskVal').innerText=this.value+'%'; document.getElementById('editRatRisk').value=this.value/100; updateRatVal()">
-            <span id="editRatRiskVal" style="font-weight:700; font-size:0.8rem;">30%</span>
-            <input type="hidden" id="editRatRisk">
+
+        <div class="profile-card hidden" id="card_drone">
+          <div class="profile-header">Drone Workflow</div>
+          <div class="section-note">Hidden internal option. Includes false-positive rework logic shown below.</div>
+          <div class="input-row">
+            <div class="input-group"><label>Price / WTG</label><input type="number" id="prof_drone_price" value="1000" onchange="calculate()"></div>
+            <div class="input-group"><label>Base Speed (WTG/Day)</label><input type="number" id="prof_drone_speed" value="8" step="0.1" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Techs</label><input type="number" id="prof_drone_techs" value="2" onchange="calculate()"></div>
+            <div class="input-group"><label>Idle Rate / Hr / Tech</label><input type="number" id="prof_drone_idle" value="110" onchange="calculate()"></div>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><label>Mob Fee</label><input type="number" id="prof_drone_mob" value="3000" onchange="calculate()"></div>
+            <div class="input-group"><label>Accom. (Tech/Day)</label><input type="number" id="prof_drone_acc" value="160" onchange="calculate()"></div>
+          </div>
+          <div class="input-group">
+            <div class="slider-header"><div>Teams Deployed</div><span id="label_teams_drone">1</span></div>
+            <input type="range" id="prof_drone_teams" min="1" max="10" step="1" value="1" oninput="updateTeamsLabel('drone', this.value); calculate()">
+          </div>
+          <label style="font-size:0.75rem; margin-bottom:2px;">Weather Idle %</label>
+          <input type="range" id="prof_drone_risk" min="0" max="100" step="5" value="20" oninput="calculate()">
+          <div class="limit-text"><span></span><span class="limit-val" id="val_drone_risk">20%</span></div>
+
+          <div style="margin-top:14px; padding-top:12px; border-top:1px solid #E2E8F0;">
+            <div class="profile-header" style="margin-bottom:10px; border-bottom:none; padding-bottom:0; color:#B91C1C;">Drone Rework Phase</div>
+            <div class="section-note">Inspection rework triggered by drone false positives only.</div>
+            <div class="input-group">
+              <label>False Positive Rate</label>
+              <input type="range" id="prof_drone_rework_pct" min="0" max="100" step="1" value="25" oninput="setText('val_drone_rework_pct', this.value + '%'); calculate()">
+              <div class="limit-text"><span>Share of turbines requiring follow-up RAT inspection</span><span class="limit-val" id="val_drone_rework_pct">25%</span></div>
+            </div>
+            <div class="input-row">
+              <div class="input-group"><label>Rework Speed (WTG/Day)</label><input type="number" id="prof_drone_rework_speed" value="0.7" step="0.1" onchange="calculate()"></div>
+              <div class="input-group"><label>Rework Techs</label><input type="number" id="prof_drone_rework_techs" value="3" onchange="calculate()"></div>
+            </div>
+            <div class="input-row">
+              <div class="input-group"><label>Rework Tech Rate/Hr</label><input type="number" id="prof_drone_rework_rate" value="140" onchange="calculate()"></div>
+              <div class="input-group"><label>Rework Idle Rate/Hr</label><input type="number" id="prof_drone_rework_idle" value="140" onchange="calculate()"></div>
+            </div>
+            <div class="input-row">
+              <div class="input-group"><label>Rework Mob Fee</label><input type="number" id="prof_drone_rework_mob" value="4500" onchange="calculate()"></div>
+              <div class="input-group"><label>Rework Accom. (Tech/Day)</label><input type="number" id="prof_drone_rework_acc" value="160" onchange="calculate()"></div>
+            </div>
+            <label style="font-size:0.75rem; margin-bottom:2px;">Rework Weather Idle %</label>
+            <input type="range" id="prof_drone_rework_risk" min="0" max="100" step="5" value="30" oninput="calculate()">
+            <div class="limit-text"><span>Manual follow-up phase</span><span class="limit-val" id="val_drone_rework_risk">30%</span></div>
+          </div>
         </div>
-        <button class="btn-done" onclick="closeEditModal()">Done</button>
+      </div>
+
+      <div class="print-row">
+        <button class="btn-print" onclick="checkPrint()">Print Report</button>
+        <div class="print-toggle-container">
+          <span class="switch-label-tiny">Full Data</span>
+          <label class="mini-switch">
+            <input type="checkbox" id="printDetailToggle">
+            <span class="mini-slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
+
+    <div class="results-area">
+      <div id="savingsBanner" class="savings-banner hidden">
+        <div>
+          <div class="savings-text">Projected saving <span class="info-icon" data-tooltip="Amount saved compared to the next cheapest currently visible option.">?</span></div>
+          <span class="savings-amount" id="savingsAmount">$0</span>
+          <div id="savingsPct" style="font-weight:700; color:#15803d; font-size:0.9rem; margin-top:4px;">0% Better</div>
+        </div>
+        <div class="payback-section">
+          <div class="savings-text">Fastest method</div>
+          <span class="savings-amount" id="fastestMethod" style="font-size:1.05rem;">-</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Total Cost Comparison <span style="font-size:0.7rem; color:#999; font-weight:400; margin-left:5px;">(Click bars to edit)</span></h3>
+        <div class="chart-container"><canvas id="costChart"></canvas></div>
+        <div class="chart-toggles">
+          <div class="toggle-pill active aerones" onclick="toggleProfile('aerones', this)">Aerones Robot</div>
+          <div class="toggle-pill active" onclick="toggleProfile('rats', this)">Rope Access</div>
+          <div class="toggle-pill active" onclick="toggleProfile('plat', this)">Platform</div>
+          <div class="toggle-pill active" onclick="toggleProfile('pick', this)">Cherry Picker</div>
+          <div class="toggle-pill internal hidden" id="droneTogglePill" onclick="toggleProfile('drone', this)">Drone Workflow</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Detailed Financial Breakdown</h3>
+        <div class="table-responsive">
+          <table id="breakdownTable">
+            <thead id="breakdownHead"></thead>
+            <tbody id="breakdownTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="printOnlySummary">
+    <div class="print-title-row">
+      <h2 class="print-title">Detailed Cost Assumptions</h2>
+      <div style="text-align:right">
+        <div class="print-date" id="printClientInfo" style="font-weight:700; color:#1C67A1;"></div>
+        <div class="print-date" id="printDate"></div>
+      </div>
+    </div>
+    <div id="printSummaryBody"></div>
+  </div>
 </div>
 
 <script>
-    // --- CONFIG ZONE ---
-    const CONFIG_ZONE = {
-        EU: {
-            symbol: '€',
-            aerones: { price: 1750, speed: 3, mob: 7000, acc: 120, techs: 3, risk: 0.15, idleRate: 90 },
-            drone:   { price: 800,  speed: 8, mob: 3000, acc: 120, techs: 2, risk: 0.2, idleRate: 90 },
-            manual:  { rate: 85,    speed: 0.7, mob: 3000, acc: 120, techs: 3, risk: 0.30, idleRate: 85 }
-        },
-        USA: {
-            symbol: '$',
-            aerones: { price: 2150, speed: 3, mob: 4500, acc: 160, techs: 3, risk: 0.15, idleRate: 110 },
-            drone:   { price: 1000, speed: 8, mob: 3000, acc: 160, techs: 2, risk: 0.2, idleRate: 110 },
-            manual:  { rate: 140,   speed: 0.7, mob: 4500, acc: 160, techs: 3, risk: 0.30, idleRate: 140 }
-        },
-        AUS: {
-            symbol: 'A$',
-            aerones: { price: 3300, speed: 3, mob: 10500, acc: 150, techs: 3, risk: 0.15, idleRate:110 },
-            drone:   { price: 1400, speed: 8, mob: 6000, acc: 150, techs: 2, risk: 0.2, idleRate: 110 },
-            manual:  { rate: 180,   speed: 0.7, mob: 6000, acc: 150, techs: 3, risk: 0.30, idleRate: 180 }
-        }
+  const CONFIG = {
+    REGION_DATA: {
+      EU: {
+        symbol: '€', marketVal: 78, capacityFactor: 35,
+        aerones: { price: 1750, speed: 3, techs: 3, idle: 90, mob: 7000, acc: 120, risk: 15 },
+        rats:    { techs: 3, speed: 1.75, rateTech: 85, rateMach: 0, idle: 85, mob: 3000, acc: 120, risk: 30 },
+        plat:    { techs: 3, speed: 2.2, rateTech: 85, rateMach: 115, idle: 110, mob: 7000, acc: 120, risk: 25 },
+        pick:    { techs: 2, speed: 3, rateTech: 85, rateMach: 145, idle: 115, mob: 7000, acc: 120, risk: 20 },
+        drone:   { price: 800, speed: 8, techs: 2, idle: 90, mob: 3000, acc: 120, risk: 20 },
+        rework:  { speed: 0.7, techs: 3, rate: 85, idle: 85, mob: 3000, acc: 120, risk: 30, pct: 25 }
+      },
+      USA: {
+        symbol: '$', marketVal: 75, capacityFactor: 35,
+        aerones: { price: 2150, speed: 3, techs: 3, idle: 110, mob: 4500, acc: 160, risk: 15 },
+        rats:    { techs: 3, speed: 1.75, rateTech: 140, rateMach: 0, idle: 140, mob: 4500, acc: 160, risk: 30 },
+        plat:    { techs: 3, speed: 2.2, rateTech: 140, rateMach: 35, idle: 160, mob: 7000, acc: 160, risk: 25 },
+        pick:    { techs: 2, speed: 3, rateTech: 140, rateMach: 333, idle: 190, mob: 7000, acc: 160, risk: 20 },
+        drone:   { price: 1000, speed: 8, techs: 2, idle: 110, mob: 3000, acc: 160, risk: 20 },
+        rework:  { speed: 0.7, techs: 3, rate: 140, idle: 140, mob: 4500, acc: 160, risk: 30, pct: 25 }
+      },
+      AUS: {
+        symbol: 'A$', marketVal: 88, capacityFactor: 35,
+        aerones: { price: 3300, speed: 3, techs: 3, idle: 110, mob: 10500, acc: 150, risk: 15 },
+        rats:    { techs: 3, speed: 1.75, rateTech: 180, rateMach: 0, idle: 180, mob: 6000, acc: 150, risk: 30 },
+        plat:    { techs: 3, speed: 2.2, rateTech: 180, rateMach: 50, idle: 220, mob: 10500, acc: 150, risk: 25 },
+        pick:    { techs: 2, speed: 3, rateTech: 180, rateMach: 512, idle: 260, mob: 10500, acc: 150, risk: 20 },
+        drone:   { price: 1400, speed: 8, techs: 2, idle: 110, mob: 6000, acc: 150, risk: 20 },
+        rework:  { speed: 0.7, techs: 3, rate: 180, idle: 180, mob: 6000, acc: 150, risk: 30, pct: 25 }
+      }
+    },
+    DEFAULTS: { numTurbines: 20, turbineModel: 3.0, receptorCount: 3, shiftLength: 10 },
+    COLORS: {
+      aerones: '#1C67A1', rats: '#3B82F6', plat: '#30A2D6', pick: '#64748B', drone: '#8B5CF6'
+    }
+  };
+
+  let CURRENCY = '$';
+  let CURRENT_REGION_KEY = 'USA';
+  let REGION_CACHE = {};
+  let myChart = null;
+  let activeModalProfile = null;
+  let currentActiveProfiles = [];
+  let cachedProfiles = {};
+
+  const getVal = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return 0;
+    const val = parseFloat(el.value);
+    return isNaN(val) ? 0 : val;
+  };
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+  const setText = (id, txt) => { const el = document.getElementById(id); if (el) el.innerText = txt; };
+  const money = (num) => CURRENCY + new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(num || 0);
+
+  function init() {
+    setVal('numTurbines', CONFIG.DEFAULTS.numTurbines);
+    setVal('turbineModel', CONFIG.DEFAULTS.turbineModel);
+    setVal('receptorCount', CONFIG.DEFAULTS.receptorCount);
+    setVal('shiftLength', CONFIG.DEFAULTS.shiftLength);
+    CURRENT_REGION_KEY = document.getElementById('regionSelector').value;
+    loadDefaultsFromConfig(CURRENT_REGION_KEY);
+    ['aerones','rats','plat','pick','drone'].forEach(k => updateTeamsLabel(k, getVal('prof_' + k + '_teams') || 1));
+    ['aerones','rats','plat','pick','drone'].forEach(k => setText('val_' + k + '_risk', getVal('prof_' + k + '_risk') + '%'));
+    setText('val_drone_rework_pct', getVal('prof_drone_rework_pct') + '%');
+    setText('val_drone_rework_risk', getVal('prof_drone_rework_risk') + '%');
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        closeModal();
+        closeClientModal();
+      }
+    });
+  }
+
+  function handleWheel(event) {
+    if (document.activeElement === event.target) {
+      event.preventDefault();
+      let val = parseFloat(event.target.value || 0);
+      val += event.deltaY < 0 ? 0.1 : -0.1;
+      event.target.value = Math.max(0, val).toFixed(1);
+      calculate();
+    }
+  }
+
+  function toggleInternalDrone() {
+    const enabled = document.getElementById('internalDroneToggle').checked;
+    const card = document.getElementById('card_drone');
+    const pill = document.getElementById('droneTogglePill');
+    document.getElementById('show_drone').checked = enabled;
+    card.classList.toggle('hidden', !enabled);
+    pill.classList.toggle('hidden', !enabled);
+    pill.classList.toggle('active', enabled);
+    calculate();
+  }
+
+  function toggleProfile(type, btn) {
+    const checkbox = document.getElementById('show_' + type);
+    checkbox.checked = !checkbox.checked;
+    btn.classList.toggle('active', checkbox.checked);
+    calculate();
+  }
+
+  function updateTeamsLabel(id, val) { setText('label_teams_' + id, val); }
+
+  function copyTeams(sourceId) {
+    const val = getVal('prof_' + sourceId + '_teams');
+    ['aerones','rats','plat','pick'].forEach(k => {
+      if (k !== sourceId) {
+        setVal('prof_' + k + '_teams', val);
+        updateTeamsLabel(k, val);
+      }
+    });
+    calculate();
+  }
+
+  function copyAccom(sourceId) {
+    const val = getVal('prof_' + sourceId + '_acc');
+    ['rats','plat','pick'].forEach(k => setVal('prof_' + k + '_acc', val));
+    calculate();
+  }
+
+  function saveCurrentRegionState(regionKey) {
+    REGION_CACHE[regionKey] = {
+      marketValue: getVal('marketValue'),
+      capacityFactor: getVal('capacityFactor'),
+      aerones: { price:getVal('prof_aerones_price'), speed:getVal('prof_aerones_speed'), techs:getVal('prof_aerones_techs'), idle:getVal('prof_aerones_idle'), mob:getVal('prof_aerones_mob'), acc:getVal('prof_aerones_acc'), risk:getVal('prof_aerones_risk') },
+      rats: { techs:getVal('prof_rats_techs'), speed:getVal('prof_rats_speed'), rateTech:getVal('prof_rats_rate_tech'), rateMach:getVal('prof_rats_rate_mach'), idle:getVal('prof_rats_idle'), mob:getVal('prof_rats_mob'), acc:getVal('prof_rats_acc'), risk:getVal('prof_rats_risk') },
+      plat: { techs:getVal('prof_plat_techs'), speed:getVal('prof_plat_speed'), rateTech:getVal('prof_plat_rate_tech'), rateMach:getVal('prof_plat_rate_mach'), idle:getVal('prof_plat_idle'), mob:getVal('prof_plat_mob'), acc:getVal('prof_plat_acc'), risk:getVal('prof_plat_risk') },
+      pick: { techs:getVal('prof_pick_techs'), speed:getVal('prof_pick_speed'), rateTech:getVal('prof_pick_rate_tech'), rateMach:getVal('prof_pick_rate_mach'), idle:getVal('prof_pick_idle'), mob:getVal('prof_pick_mob'), acc:getVal('prof_pick_acc'), risk:getVal('prof_pick_risk') },
+      drone: { price:getVal('prof_drone_price'), speed:getVal('prof_drone_speed'), techs:getVal('prof_drone_techs'), idle:getVal('prof_drone_idle'), mob:getVal('prof_drone_mob'), acc:getVal('prof_drone_acc'), risk:getVal('prof_drone_risk') },
+      rework: { pct:getVal('prof_drone_rework_pct'), speed:getVal('prof_drone_rework_speed'), techs:getVal('prof_drone_rework_techs'), rate:getVal('prof_drone_rework_rate'), idle:getVal('prof_drone_rework_idle'), mob:getVal('prof_drone_rework_mob'), acc:getVal('prof_drone_rework_acc'), risk:getVal('prof_drone_rework_risk') }
     };
+  }
 
-    let ACTIVE_DATA = {}; 
-    let CURRENCY = '$';
-    let myChart = null;
+  function restoreRegionState(data) {
+    CURRENCY = CONFIG.REGION_DATA[CURRENT_REGION_KEY].symbol;
+    setVal('marketValue', data.marketValue);
+    setVal('capacityFactor', data.capacityFactor);
+    setProfileVals('aerones', data.aerones);
+    setProfileVals('rats', data.rats);
+    setProfileVals('plat', data.plat);
+    setProfileVals('pick', data.pick);
+    setProfileVals('drone', data.drone);
+    setVal('prof_drone_rework_pct', data.rework.pct);
+    setVal('prof_drone_rework_speed', data.rework.speed);
+    setVal('prof_drone_rework_techs', data.rework.techs);
+    setVal('prof_drone_rework_rate', data.rework.rate);
+    setVal('prof_drone_rework_idle', data.rework.idle);
+    setVal('prof_drone_rework_mob', data.rework.mob);
+    setVal('prof_drone_rework_acc', data.rework.acc);
+    setVal('prof_drone_rework_risk', data.rework.risk);
+  }
 
-    function init() { loadDefaults(); }
+  function setProfileVals(prefix, data) {
+    Object.keys(data).forEach(key => {
+      const id = 'prof_' + prefix + '_' + key;
+      const el = document.getElementById(id);
+      if (el) setVal(id, data[key]);
+    });
+  }
 
-    function loadDefaults() {
-        const region = document.getElementById('regionSelector').value;
-        const cached = localStorage.getItem('lps_calc_' + region);
-        if (cached) {
-            ACTIVE_DATA = JSON.parse(cached);
-        } else {
-            ACTIVE_DATA = JSON.parse(JSON.stringify(CONFIG_ZONE[region]));
-        }
-        CURRENCY = CONFIG_ZONE[region].symbol;
-        calculate();
+  function loadDefaultsFromConfig(region) {
+    const data = CONFIG.REGION_DATA[region];
+    CURRENCY = data.symbol;
+    setVal('marketValue', data.marketVal);
+    setVal('capacityFactor', data.capacityFactor);
+    setProfileVals('aerones', data.aerones);
+    setProfileVals('rats', data.rats);
+    setProfileVals('plat', data.plat);
+    setProfileVals('pick', data.pick);
+    setProfileVals('drone', data.drone);
+    setVal('prof_drone_rework_pct', data.rework.pct);
+    setVal('prof_drone_rework_speed', data.rework.speed);
+    setVal('prof_drone_rework_techs', data.rework.techs);
+    setVal('prof_drone_rework_rate', data.rework.rate);
+    setVal('prof_drone_rework_idle', data.rework.idle);
+    setVal('prof_drone_rework_mob', data.rework.mob);
+    setVal('prof_drone_rework_acc', data.rework.acc);
+    setVal('prof_drone_rework_risk', data.rework.risk);
+    ['aerones','rats','plat','pick','drone'].forEach(k => { setVal('prof_' + k + '_teams', 1); updateTeamsLabel(k, 1); });
+    calculate();
+  }
+
+  function handleRegionChange() {
+    saveCurrentRegionState(CURRENT_REGION_KEY);
+    CURRENT_REGION_KEY = document.getElementById('regionSelector').value;
+    if (REGION_CACHE[CURRENT_REGION_KEY]) restoreRegionState(REGION_CACHE[CURRENT_REGION_KEY]);
+    else loadDefaultsFromConfig(CURRENT_REGION_KEY);
+    calculate();
+  }
+
+  function resetToDefaults() {
+    delete REGION_CACHE[CURRENT_REGION_KEY];
+    loadDefaultsFromConfig(CURRENT_REGION_KEY);
+    document.getElementById('internalDroneToggle').checked = false;
+    toggleInternalDrone();
+  }
+
+  function getAdjustedSpeed(baseSpeed, type) {
+    const recCount = getVal('receptorCount');
+    const shiftLength = getVal('shiftLength');
+    if (recCount <= 3) return baseSpeed;
+    const totalMins = shiftLength * 60;
+    const baseMinsPerWTG = totalMins / Math.max(baseSpeed, 0.01);
+    const penaltyPerRec = type === 'drone' ? 3 : 5;
+    const addedTime = (recCount - 3) * 3 * penaltyPerRec;
+    return totalMins / (baseMinsPerWTG + addedTime);
+  }
+
+  function getAccomTotal(activeDays, weatherDays, techs, teams, dayRate) {
+    const totalDuration = activeDays + weatherDays;
+    if (totalDuration <= 0) return 0;
+    let billableDays = totalDuration;
+    if (totalDuration >= 7) billableDays += Math.floor(totalDuration / 7);
+    return billableDays * techs * teams * dayRate;
+  }
+
+  function buildProfiles() {
+    const showAerones = document.getElementById('show_aerones').checked;
+    const showRats = document.getElementById('show_rats').checked;
+    const showPlat = document.getElementById('show_plat').checked;
+    const showPick = document.getElementById('show_pick').checked;
+    const showDrone = document.getElementById('show_drone').checked;
+
+    return [
+      { key:'aerones', name:'Aerones Robot', visible:showAerones, color:CONFIG.COLORS.aerones, type:'fixed', speedType:'aerones', price:getVal('prof_aerones_price'), techs:getVal('prof_aerones_techs'), baseSpeed:getVal('prof_aerones_speed'), idleRate:getVal('prof_aerones_idle'), mob:getVal('prof_aerones_mob'), accRate:getVal('prof_aerones_acc'), risk:getVal('prof_aerones_risk')/100, teams:getVal('prof_aerones_teams') },
+      { key:'rats', name:'Rope Access', visible:showRats, color:CONFIG.COLORS.rats, type:'hourly', speedType:'manual', techs:getVal('prof_rats_techs'), baseSpeed:getVal('prof_rats_speed'), techRate:getVal('prof_rats_rate_tech'), machRate:getVal('prof_rats_rate_mach'), idleRate:getVal('prof_rats_idle'), mob:getVal('prof_rats_mob'), accRate:getVal('prof_rats_acc'), risk:getVal('prof_rats_risk')/100, teams:getVal('prof_rats_teams') },
+      { key:'plat', name:'Suspended Platform', visible:showPlat, color:CONFIG.COLORS.plat, type:'hourly', speedType:'manual', techs:getVal('prof_plat_techs'), baseSpeed:getVal('prof_plat_speed'), techRate:getVal('prof_plat_rate_tech'), machRate:getVal('prof_plat_rate_mach'), idleRate:getVal('prof_plat_idle'), mob:getVal('prof_plat_mob'), accRate:getVal('prof_plat_acc'), risk:getVal('prof_plat_risk')/100, teams:getVal('prof_plat_teams') },
+      { key:'pick', name:'Cherry Picker', visible:showPick, color:CONFIG.COLORS.pick, type:'hourly', speedType:'manual', techs:getVal('prof_pick_techs'), baseSpeed:getVal('prof_pick_speed'), techRate:getVal('prof_pick_rate_tech'), machRate:getVal('prof_pick_rate_mach'), idleRate:getVal('prof_pick_idle'), mob:getVal('prof_pick_mob'), accRate:getVal('prof_pick_acc'), risk:getVal('prof_pick_risk')/100, teams:getVal('prof_pick_teams') },
+      { key:'drone', name:'Drone Workflow', visible:showDrone, color:CONFIG.COLORS.drone, type:'fixed', speedType:'drone', price:getVal('prof_drone_price'), techs:getVal('prof_drone_techs'), baseSpeed:getVal('prof_drone_speed'), idleRate:getVal('prof_drone_idle'), mob:getVal('prof_drone_mob'), accRate:getVal('prof_drone_acc'), risk:getVal('prof_drone_risk')/100, teams:getVal('prof_drone_teams'), hasRework:true }
+    ];
+  }
+
+  function simulateProfile(profile) {
+    const count = getVal('numTurbines');
+    const mw = getVal('turbineModel');
+    const mv = getVal('marketValue');
+    const capFactor = getVal('capacityFactor') / 100;
+    const shiftLength = getVal('shiftLength');
+    const downRate = mw * mv * capFactor;
+    const adjSpeed = getAdjustedSpeed(profile.baseSpeed, profile.speedType);
+    const activeDays = count / Math.max(adjSpeed * Math.max(profile.teams,1), 0.01);
+    const weatherDays = activeDays * profile.risk;
+    const serviceHours = activeDays * shiftLength * profile.teams;
+    const accom = getAccomTotal(activeDays, weatherDays, profile.techs, profile.teams, profile.accRate);
+    const mob = profile.mob * profile.teams;
+
+    let labor = 0;
+    if (profile.type === 'fixed') labor = profile.price * count;
+    else labor = serviceHours * ((profile.techRate * profile.techs) + profile.machRate);
+
+    const idle = weatherDays * shiftLength * profile.idleRate * profile.techs * profile.teams;
+    const downtime = activeDays * shiftLength * downRate;
+
+    let rework = { service:0, idle:0, downtime:0, turbines:0, activeDays:0, weatherDays:0 };
+    if (profile.hasRework) {
+      const rePct = getVal('prof_drone_rework_pct') / 100;
+      const reCount = count * rePct;
+      const reSpeed = getAdjustedSpeed(getVal('prof_drone_rework_speed'), 'manual');
+      const reTechs = getVal('prof_drone_rework_techs');
+      const reRisk = getVal('prof_drone_rework_risk') / 100;
+      const reActive = reCount / Math.max(reSpeed, 0.01);
+      const reWeather = reActive * reRisk;
+      const reHours = reActive * shiftLength;
+      const reAccom = getAccomTotal(reActive, reWeather, reTechs, 1, getVal('prof_drone_rework_acc'));
+      rework = {
+        service: (reHours * reTechs * getVal('prof_drone_rework_rate')) + getVal('prof_drone_rework_mob') + reAccom,
+        idle: reWeather * shiftLength * getVal('prof_drone_rework_idle') * reTechs,
+        downtime: reActive * shiftLength * downRate,
+        turbines: reCount,
+        activeDays: reActive,
+        weatherDays: reWeather
+      };
     }
 
-    function resetDefaults() {
-        const region = document.getElementById('regionSelector').value;
-        if(confirm("Are you sure you want to reset " + region + " to original company defaults?")) {
-            localStorage.removeItem('lps_calc_' + region);
-            loadDefaults();
-        }
-    }
+    return {
+      ...profile,
+      adjSpeed,
+      activeDays,
+      weatherDays,
+      totalDays: activeDays + weatherDays,
+      labor,
+      mob,
+      accom,
+      serviceCost: labor + mob + accom,
+      idleCost: idle,
+      downtimeLoss: downtime,
+      rework,
+      total: labor + mob + accom + idle + downtime + rework.service + rework.idle + rework.downtime,
+      perWtgExclDown: (labor + mob + accom + idle + rework.service + rework.idle) / Math.max(count,1),
+      perWtgInclDown: (labor + mob + accom + idle + downtime + rework.service + rework.idle + rework.downtime) / Math.max(count,1)
+    };
+  }
 
-    function saveToCache() {
-        const region = document.getElementById('regionSelector').value;
-        localStorage.setItem('lps_calc_' + region, JSON.stringify(ACTIVE_DATA));
-    }
+  function calculate() {
+    try {
+      const count = getVal('numTurbines');
+      const mw = getVal('turbineModel');
+      const mv = getVal('marketValue');
+      const capFactor = getVal('capacityFactor') / 100;
+      const annualRevenue = count * mw * 8760 * capFactor * mv;
+      const downRate = mw * mv * capFactor;
+      setText('annualRevenueVal', money(annualRevenue));
+      setText('downtimeRateVal', money(downRate) + '/hr');
 
-    function getAdjustedSpeed(baseSpeed, type) {
-        const recCount = parseFloat(document.getElementById('receptorCount').value);
-        const shiftLength = parseFloat(document.getElementById('shiftLength').value);
-        if (recCount <= 3) return baseSpeed;
-        const totalMins = shiftLength * 60;
-        const baseMinsPerWTG = totalMins / baseSpeed;
-        const penaltyPerRec = type === 'drone' ? 3 : 5;
-        const addedTime = (recCount - 3) * 3 * penaltyPerRec;
-        return totalMins / (baseMinsPerWTG + addedTime);
-    }
+      ['aerones','rats','plat','pick','drone'].forEach(k => {
+        const riskId = 'prof_' + k + '_risk';
+        if (document.getElementById(riskId)) setText('val_' + k + '_risk', getVal(riskId) + '%');
+      });
+      setText('val_drone_rework_risk', getVal('prof_drone_rework_risk') + '%');
+      setText('val_drone_rework_pct', getVal('prof_drone_rework_pct') + '%');
 
-    function getAccomTotal(activeDays, weatherDays, techs, dayRate) {
-        const totalDuration = activeDays + weatherDays;
-        if (totalDuration <= 0) return 0;
-        let billableDays = totalDuration;
-        if (totalDuration >= 7) {
-            const extraSundays = Math.floor(totalDuration / 7);
-            billableDays += extraSundays;
-        }
-        return billableDays * techs * dayRate;
-    }
+      const profiles = buildProfiles();
+      cachedProfiles = {};
+      profiles.forEach(p => cachedProfiles[p.key] = p);
+      currentActiveProfiles = profiles.filter(p => p.visible);
 
-    function calculate() {
-        const data = ACTIVE_DATA;
-        const count = parseFloat(document.getElementById('numTurbines').value);
-        const rPct = parseFloat(document.getElementById('reworkPct').value) / 100;
-        const mw = parseFloat(document.getElementById('turbineModel').value);
-        const energyPrice = parseFloat(document.getElementById('marketValue').value);
-        const cap = parseFloat(document.getElementById('capacityFactor').value) / 100;
-        const downRate = mw * energyPrice * cap;
-        const shiftLength = parseFloat(document.getElementById('shiftLength').value);
-
-        const a_speed = getAdjustedSpeed(data.aerones.speed, 'aerones');
-        const a_actDays = count / a_speed;
-        const a_wDays = a_actDays * data.aerones.risk;
-        const a_accom = getAccomTotal(a_actDays, a_wDays, data.aerones.techs, data.aerones.acc);
-        const a_base = (data.aerones.price * count) + data.aerones.mob + a_accom;
-        const a_idle = a_wDays * shiftLength * data.aerones.techs * data.aerones.idleRate;
-        const a_down = a_actDays * shiftLength * downRate;
-        const a_total = a_base + a_idle + a_down;
-
-        const d_speed = getAdjustedSpeed(data.drone.speed, 'drone');
-        const d_actDays = count / d_speed;
-        const d_wDays = d_actDays * data.drone.risk;
-        const d_accom = getAccomTotal(d_actDays, d_wDays, data.drone.techs, data.drone.acc);
-        const d_base = (data.drone.price * count) + data.drone.mob + d_accom;
-        const d_idle = d_wDays * shiftLength * data.drone.techs * data.drone.idleRate;
-        const d_down = d_actDays * shiftLength * downRate;
-
-        const r_count = count * rPct;
-        let r_serv = 0, r_idl = 0, r_dwn = 0;
-        if (r_count > 0) {
-            const m_speed = getAdjustedSpeed(data.manual.speed, 'manual');
-            const r_actDays = r_count / m_speed;
-            const r_wDays = r_actDays * data.manual.risk;
-            const r_labor = r_actDays * shiftLength * data.manual.techs * data.manual.rate;
-            const r_accom = getAccomTotal(r_actDays, r_wDays, data.manual.techs, data.manual.acc);
-            r_serv = r_labor + data.manual.mob + r_accom;
-            r_idl = r_wDays * shiftLength * data.manual.techs * data.manual.idleRate;
-            r_dwn = r_actDays * shiftLength * downRate;
-        }
-        const d_total = d_base + d_idle + d_down + r_serv + r_idl + r_dwn;
-
-        const money = (val) => CURRENCY + Math.round(val).toLocaleString();
-        document.getElementById('breakdownTableBody').innerHTML = `
-            <tr>
-                <td><strong>Aerones Robot</strong></td>
-                <td>${a_speed.toFixed(1)}</td>
-                <td>${money(a_base)}</td>
-                <td>${money(a_idle)}</td>
-                <td>${money(a_down)}</td>
-                <td>-</td><td>-</td><td>-</td>
-                <td class="total-cost" style="border-left:2px solid #E2E8F0;">${money(a_total)}</td>
-                <td style="font-weight:700;">${money((a_base + a_idle)/count)}</td>
-                <td style="font-weight:700;">${money(a_total/count)}</td>
-            </tr>
-            <tr>
-                <td><strong>Drone + RAT Rework</strong></td>
-                <td>${d_speed.toFixed(1)}</td>
-                <td>${money(d_base)}</td>
-                <td>${money(d_idle)}</td>
-                <td>${money(d_down)}</td>
-                <td style="color:var(--brand-danger)">${money(r_serv)}</td>
-                <td style="color:var(--brand-danger)">${money(r_idl)}</td>
-                <td style="color:var(--brand-danger)">${money(r_dwn)}</td>
-                <td class="total-cost" style="border-left:2px solid #E2E8F0;">${money(d_total)}</td>
-                <td style="font-weight:700;">${money((d_base + d_idle + r_serv + r_idl)/count)}</td>
-                <td style="font-weight:700;">${money(d_total/count)}</td>
-            </tr>
-        `;
-
-        updateChart(a_base, a_idle, a_down, d_base, d_idle, d_down, r_serv, r_idl, r_dwn);
-        const banner = document.getElementById('savingsBanner');
-        if(a_total < d_total) {
-            banner.classList.remove('hidden');
-            document.getElementById('savingsAmount').innerText = money(d_total - a_total);
-            document.getElementById('savingsPct').innerText = (((d_total - a_total)/d_total)*100).toFixed(1) + "% cheaper";
-        } else { banner.classList.add('hidden'); }
-    }
-
-    function updateChart(a_b, a_i, a_d, d_b, d_i, d_d, r_s, r_i, r_dn) {
-        const ctx = document.getElementById('costChart').getContext('2d');
-        if(myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Aerones Robot', 'Drone + RAT Rework'],
-                datasets: [
-                    { label: 'Base Service', data: [a_b, d_b], backgroundColor: '#1C67A1' },
-                    { label: 'Idle', data: [a_i, d_i], backgroundColor: '#93C5FD' },
-                    { label: 'Downtime', data: [a_d, d_d], backgroundColor: '#94A3B8' },
-                    { label: 'Rework Service', data: [0, r_s], backgroundColor: '#EF4444' },
-                    { label: 'Rework Idle', data: [0, r_i], backgroundColor: '#FECACA' },
-                    { label: 'Rework Downtime', data: [0, r_dn], backgroundColor: '#7F1D1D' }
-                ]
-            },
-            options: { 
-                responsive: true, maintainAspectRatio: false, 
-                scales: { x: { stacked: true }, y: { stacked: true } },
-                datasets: { bar: { maxBarThickness: 150 } },
-                onClick: (e, el) => { if(el.length > 0) openEditModal(el[0].index === 0 ? 'aerones' : 'drone'); }
-            }
+      if (!activeModalProfile) {
+        ['aerones','rats','plat','pick'].forEach(k => {
+          document.getElementById('card_' + k).style.display = document.getElementById('show_' + k).checked ? 'block' : 'none';
         });
+        if (document.getElementById('internalDroneToggle').checked) {
+          document.getElementById('card_drone').style.display = document.getElementById('show_drone').checked ? 'block' : 'none';
+        }
+      }
+
+      const results = currentActiveProfiles.map(simulateProfile);
+      renderTable(results, document.getElementById('show_drone').checked);
+      renderChart(results);
+      updateSavingsBanner(results);
+    } catch (e) {
+      console.error(e);
+      document.getElementById('breakdownTableBody').innerHTML = `<tr><td colspan="12" style="color:red;">Calculation error: ${e.message}</td></tr>`;
+    }
+  }
+
+  function renderTable(results, droneShown) {
+    const head = document.getElementById('breakdownHead');
+    const body = document.getElementById('breakdownTableBody');
+    const bestTotal = Math.min(...results.map(r => r.total));
+
+    if (droneShown) {
+      head.innerHTML = `
+        <tr>
+          <th rowspan="2">Method</th>
+          <th rowspan="2">Speed<br>(WTG/Day)</th>
+          <th rowspan="2">Duration<br>(Days)</th>
+          <th rowspan="2">Service</th>
+          <th rowspan="2">Idle</th>
+          <th rowspan="2">Downtime</th>
+          <th colspan="3" class="rework-header">Drone Rework Phase</th>
+          <th rowspan="2">Total</th>
+          <th rowspan="2">Cost/WTG<br>(Excl. Down)</th>
+          <th rowspan="2">Cost/WTG<br>(Incl. Down)</th>
+        </tr>
+        <tr>
+          <th class="rework-header">Service</th>
+          <th class="rework-header">Idle</th>
+          <th class="rework-header">Downtime</th>
+        </tr>`;
+
+      body.innerHTML = results.map(r => `
+        <tr class="${r.total === bestTotal ? 'winner' : ''}">
+          <td>${r.name}</td>
+          <td>${r.adjSpeed.toFixed(1)}</td>
+          <td>${r.totalDays.toFixed(1)}</td>
+          <td>${money(r.serviceCost)}</td>
+          <td>${money(r.idleCost)}</td>
+          <td>${money(r.downtimeLoss)}</td>
+          <td style="color:${r.rework.service > 0 ? '#B91C1C' : 'inherit'}">${r.rework.service > 0 ? money(r.rework.service) : '-'}</td>
+          <td style="color:${r.rework.idle > 0 ? '#B91C1C' : 'inherit'}">${r.rework.idle > 0 ? money(r.rework.idle) : '-'}</td>
+          <td style="color:${r.rework.downtime > 0 ? '#B91C1C' : 'inherit'}">${r.rework.downtime > 0 ? money(r.rework.downtime) : '-'}</td>
+          <td class="total-cost">${money(r.total)}</td>
+          <td>${money(r.perWtgExclDown)}</td>
+          <td>${money(r.perWtgInclDown)}</td>
+        </tr>`).join('');
+    } else {
+      head.innerHTML = `
+        <tr>
+          <th>Method</th>
+          <th>Speed<br>(WTG/Day) <span class="info-icon" data-tooltip="Speed is adjusted automatically for receptor count and shift length.">?</span></th>
+          <th>Duration<br>(Days)</th>
+          <th>Service<br>Cost</th>
+          <th>Idle<br>Cost</th>
+          <th>Downtime<br>Loss</th>
+          <th>Total</th>
+          <th>Cost / WTG</th>
+        </tr>`;
+
+      body.innerHTML = results.map(r => `
+        <tr class="${r.total === bestTotal ? 'winner' : ''}">
+          <td>${r.name}</td>
+          <td>${r.adjSpeed.toFixed(1)}</td>
+          <td>${r.totalDays.toFixed(1)}</td>
+          <td>${money(r.serviceCost)}</td>
+          <td>${money(r.idleCost)}</td>
+          <td>${money(r.downtimeLoss)}</td>
+          <td class="total-cost">${money(r.total)}</td>
+          <td>${money(r.total / Math.max(getVal('numTurbines'),1))}</td>
+        </tr>`).join('');
+    }
+  }
+
+  function renderChart(results) {
+    const ctx = document.getElementById('costChart').getContext('2d');
+    const labels = results.map(r => r.name);
+    const service = results.map(r => r.serviceCost);
+    const idle = results.map(r => r.idleCost);
+    const down = results.map(r => r.downtimeLoss);
+    const reworkService = results.map(r => r.rework.service || 0);
+    const reworkIdle = results.map(r => r.rework.idle || 0);
+    const reworkDown = results.map(r => r.rework.downtime || 0);
+    const colors = results.map(r => r.color);
+
+    const datasets = [
+      { label: 'Service Cost', data: service, backgroundColor: colors, stack: '0' },
+      { label: 'Idle Cost', data: idle, backgroundColor: '#bfdbfe', stack: '0' },
+      { label: 'Downtime Loss', data: down, backgroundColor: '#94a3b8', stack: '0' }
+    ];
+
+    const showRework = reworkService.some(v => v > 0) || reworkIdle.some(v => v > 0) || reworkDown.some(v => v > 0);
+    if (showRework) {
+      datasets.push(
+        { label: 'Rework Service', data: reworkService, backgroundColor: '#EF4444', stack: '0' },
+        { label: 'Rework Idle', data: reworkIdle, backgroundColor: '#FECACA', stack: '0' },
+        { label: 'Rework Downtime', data: reworkDown, backgroundColor: '#7F1D1D', stack: '0' }
+      );
     }
 
-    function openEditModal(key) {
-        const d = ACTIVE_DATA[key];
-        const m = ACTIVE_DATA.manual;
-        document.getElementById('editModalHeader').innerText = "Edit " + (key === 'aerones' ? 'Aerones' : 'Drone');
-        document.getElementById('editKey').value = key;
-        document.getElementById('editPrice').value = d.price;
-        document.getElementById('editSpeed').value = d.speed;
-        document.getElementById('editTechs').value = d.techs;
-        document.getElementById('editMob').value = d.mob;
-        document.getElementById('editAcc').value = d.acc;
-        document.getElementById('editIdleRate').value = d.idleRate;
-        document.getElementById('editRiskRange').value = d.risk * 100;
-        document.getElementById('editRiskVal').innerText = (d.risk * 100) + "%";
-        document.getElementById('editRisk').value = d.risk;
-        
-        document.getElementById('editRatSpeed').value = m.speed;
-        document.getElementById('editRatRate').value = m.rate;
-        document.getElementById('editRatTechs').value = m.techs;
-        document.getElementById('editRatMob').value = m.mob;
-        document.getElementById('editRatAcc').value = m.acc;
-        document.getElementById('editRatIdle').value = m.idleRate;
-        document.getElementById('editRatRiskRange').value = m.risk * 100;
-        document.getElementById('editRatRiskVal').innerText = (m.risk * 100) + "%";
-        document.getElementById('editRatRisk').value = m.risk;
-        document.getElementById('editProfileModal').classList.add('active');
+    if (myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { x: { stacked: true }, y: { stacked: true } },
+        plugins: { legend: { position: 'bottom' }, tooltip: { mode: 'index', intersect: false } },
+        onClick: (evt, elements) => { if (elements.length > 0) openModal(elements[0].index); }
+      }
+    });
+  }
+
+  function updateSavingsBanner(results) {
+    const banner = document.getElementById('savingsBanner');
+    const aerones = results.find(r => r.key === 'aerones');
+    if (!aerones) return banner.classList.add('hidden');
+    const others = results.filter(r => r.key !== 'aerones');
+    const nextBest = others.length ? Math.min(...others.map(r => r.total)) : Infinity;
+    const fastest = [...results].sort((a,b) => a.totalDays - b.totalDays)[0];
+    setText('fastestMethod', fastest ? `${fastest.name} (${fastest.totalDays.toFixed(1)} d)` : '-');
+    if (others.length && aerones.total < nextBest) {
+      const saving = nextBest - aerones.total;
+      const pct = (saving / nextBest) * 100;
+      banner.classList.remove('hidden');
+      setText('savingsAmount', money(saving));
+      setText('savingsPct', pct.toFixed(1) + '% Better');
+    } else {
+      banner.classList.add('hidden');
     }
+  }
 
-    function closeEditModal() { document.getElementById('editProfileModal').classList.remove('active'); }
+  function openModal(index) {
+    if (!currentActiveProfiles[index]) return;
+    const profileKey = currentActiveProfiles[index].key;
+    const card = document.getElementById('card_' + profileKey);
+    activeModalProfile = card;
+    document.getElementById('modalBody').appendChild(card);
+    document.getElementById('profileModal').classList.add('active');
+  }
 
-    function updateProfileVal() {
-        const d = ACTIVE_DATA[document.getElementById('editKey').value];
-        d.price = parseFloat(document.getElementById('editPrice').value);
-        d.speed = parseFloat(document.getElementById('editSpeed').value);
-        d.techs = parseFloat(document.getElementById('editTechs').value);
-        d.mob = parseFloat(document.getElementById('editMob').value);
-        d.acc = parseFloat(document.getElementById('editAcc').value);
-        d.idleRate = parseFloat(document.getElementById('editIdleRate').value);
-        d.risk = parseFloat(document.getElementById('editRisk').value);
-        saveToCache();
-        calculate();
+  function closeModal() {
+    const advancedSection = document.getElementById('advancedSection');
+    if (activeModalProfile) {
+      ['aerones','rats','plat','pick','drone'].forEach(k => {
+        const card = document.getElementById('card_' + k);
+        if (card) advancedSection.appendChild(card);
+      });
+      activeModalProfile = null;
     }
+    document.getElementById('profileModal').classList.remove('active');
+  }
 
-    function updateRatVal() {
-        const m = ACTIVE_DATA.manual;
-        m.speed = parseFloat(document.getElementById('editRatSpeed').value);
-        m.rate = parseFloat(document.getElementById('editRatRate').value);
-        m.techs = parseFloat(document.getElementById('editRatTechs').value);
-        m.mob = parseFloat(document.getElementById('editRatMob').value);
-        m.acc = parseFloat(document.getElementById('editRatAcc').value);
-        m.idleRate = parseFloat(document.getElementById('editRatIdle').value);
-        m.risk = parseFloat(document.getElementById('editRatRisk').value);
-        saveToCache();
-        calculate();
+  function checkPrint() {
+    if (sessionStorage.getItem('clientInfoSet')) preparePrint();
+    else document.getElementById('clientModal').classList.add('active');
+  }
+
+  function closeClientModal() { document.getElementById('clientModal').classList.remove('active'); }
+
+  function saveClientInfoAndPrint() {
+    const client = document.getElementById('clientNameInput').value;
+    const project = document.getElementById('projectNameInput').value;
+    if (client || project) {
+      sessionStorage.setItem('clientInfoSet', 'true');
+      sessionStorage.setItem('clientName', client);
+      sessionStorage.setItem('projectName', project);
     }
+    closeClientModal();
+    preparePrint();
+  }
 
-    window.onload = init;
+  function preparePrint() {
+    const includeDetails = document.getElementById('printDetailToggle').checked;
+    const regionEl = document.getElementById('regionSelector');
+    const region = regionEl.options[regionEl.selectedIndex].text;
+    const turbines = getVal('numTurbines');
+    const model = getVal('turbineModel');
+    const price = getVal('marketValue');
+    const capacity = getVal('capacityFactor');
+    const receptors = getVal('receptorCount');
+    const shift = getVal('shiftLength');
+    const cName = sessionStorage.getItem('clientName') || '';
+    const pName = sessionStorage.getItem('projectName') || '';
+    const titleStr = cName && pName ? `${cName} - ${pName}` : (cName || pName || '');
+    document.getElementById('printClientInfo').innerText = titleStr;
+    document.getElementById('printDate').innerText = new Date().toLocaleDateString();
+
+    document.getElementById('printHeader').innerHTML = `
+      <div class="print-grid">
+        <div><span class="print-label">Region</span><span class="print-val">${region}</span></div>
+        <div><span class="print-label">Scope</span><span class="print-val">${turbines} x ${model}MW</span></div>
+        <div><span class="print-label">Energy</span><span class="print-val">${CURRENCY}${price}/MWh</span></div>
+        <div><span class="print-label">Receptors</span><span class="print-val">${receptors}/Blade</span></div>
+      </div>
+      ${titleStr ? `<div style="margin-top:10px; font-weight:700; color:#1C67A1;">Project: ${titleStr}</div>` : ''}`;
+
+    if (includeDetails) {
+      document.getElementById('printOnlySummary').classList.add('visible');
+      const profiles = currentActiveProfiles.map(simulateProfile);
+      let summaryHTML = `
+        <div class="summary-section">
+          <h3>General Information</h3>
+          <div class="params-grid">
+            <div class="param-item"><span class="param-label">Project Region</span><span class="param-value">${region}</span></div>
+            <div class="param-item"><span class="param-label">Campaign Scope</span><span class="param-value">${turbines} Turbines</span></div>
+            <div class="param-item"><span class="param-label">Turbine Model</span><span class="param-value">${model} MW</span></div>
+            <div class="param-item"><span class="param-label">Energy Price</span><span class="param-value">${CURRENCY}${price} / MWh</span></div>
+            <div class="param-item"><span class="param-label">Capacity Factor</span><span class="param-value">${capacity}%</span></div>
+            <div class="param-item"><span class="param-label">Receptors / Blade</span><span class="param-value">${receptors}</span></div>
+            <div class="param-item"><span class="param-label">Shift Length</span><span class="param-value">${shift} h</span></div>
+            <div class="param-item"><span class="param-label">Hourly Downtime / WTG</span><span class="param-value">${money(getVal('turbineModel') * getVal('marketValue') * getVal('capacityFactor') / 100)}</span></div>
+          </div>
+        </div>
+        <div class="summary-section">
+          <h3>Service Profile Configuration</h3>
+          <table class="print-table">
+            <tr>
+              <th>Method</th>
+              <th>Teams</th>
+              <th>Pricing Basis</th>
+              <th>Base Speed</th>
+              <th>Techs</th>
+              <th>Idle Rate</th>
+              <th>Mobilization</th>
+              <th>Accommodation</th>
+              <th>Weather Idle %</th>
+            </tr>`;
+      profiles.forEach(p => {
+        let basis = p.type === 'fixed' ? `${money(p.price)} / WTG` : `${money((p.techRate * p.techs) + p.machRate)} / team hr`;
+        summaryHTML += `<tr>
+          <td>${p.name}</td>
+          <td>${p.teams}</td>
+          <td>${basis}</td>
+          <td>${p.baseSpeed} WTG/day</td>
+          <td>${p.techs}</td>
+          <td>${money(p.idleRate)} / tech hr</td>
+          <td>${money(p.mob)}</td>
+          <td>${money(p.accRate)} / tech/day</td>
+          <td>${(p.risk * 100).toFixed(0)}%</td>
+        </tr>`;
+        if (p.hasRework) {
+          summaryHTML += `<tr>
+            <td>↳ Drone Rework</td>
+            <td>1</td>
+            <td>${money(getVal('prof_drone_rework_rate') * getVal('prof_drone_rework_techs'))} / team hr</td>
+            <td>${getVal('prof_drone_rework_speed')} WTG/day</td>
+            <td>${getVal('prof_drone_rework_techs')}</td>
+            <td>${money(getVal('prof_drone_rework_idle'))} / tech hr</td>
+            <td>${money(getVal('prof_drone_rework_mob'))}</td>
+            <td>${money(getVal('prof_drone_rework_acc'))} / tech/day</td>
+            <td>${getVal('prof_drone_rework_risk')}%</td>
+          </tr>`;
+        }
+      });
+      summaryHTML += `</table></div>`;
+      document.getElementById('printSummaryBody').innerHTML = summaryHTML;
+    } else {
+      document.getElementById('printOnlySummary').classList.remove('visible');
+      document.getElementById('printSummaryBody').innerHTML = '';
+    }
+    window.print();
+  }
+
+  window.onload = init;
 </script>
 </body>
 </html>
